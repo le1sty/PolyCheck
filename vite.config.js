@@ -7,22 +7,17 @@ export default defineConfig({
     preact(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.png', 'splash.png', 'icons/*.png'],
-      
+      includeAssets: ['favicon.svg', 'icons/*.png'],
       manifest: {
-        name: 'My PWA App',
-        short_name: 'MyPWA',
-        description: 'Учебный проект PWA',
+        name: 'StudentTracker',
+        short_name: 'STracker',
+        description: 'Приложение для самоотчетности студентов',
         theme_color: '#4f46e5',
         background_color: '#ffffff',
-        display: 'standalone',
+        display: 'standalone',  // ВАЖНО: standalone вместо browser
         orientation: 'portrait',
         scope: '/',
         start_url: '/',
-        
-        // iOS специфичные поля
-        prefer_related_applications: false,
-        
         icons: [
           {
             src: 'icons/icon-72x72.png',
@@ -50,12 +45,6 @@ export default defineConfig({
             type: 'image/png'
           },
           {
-            src: 'icons/icon-180x180.png',
-            sizes: '180x180',
-            type: 'image/png',
-            purpose: 'any maskable'
-          },
-          {
             src: 'icons/icon-192x192.png',
             sizes: '192x192',
             type: 'image/png'
@@ -70,45 +59,30 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png'
           }
-        ]
-      },
-      
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        runtimeCaching: [
+        ],
+        // Добавляем поддержку разных платформ
+        categories: ['education', 'productivity'],
+        shortcuts: [
           {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts-cache',
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365
-              }
-            }
+            name: 'Главная',
+            short_name: 'Главная',
+            description: 'Перейти на главную',
+            url: '/',
+            icons: [{ src: 'icons/icon-96x96.png', sizes: '96x96' }]
+          },
+          {
+            name: 'Статистика',
+            short_name: 'Статистика',
+            description: 'Посмотреть статистику',
+            url: '/stats',
+            icons: [{ src: 'icons/icon-96x96.png', sizes: '96x96' }]
           }
         ]
-      },
-      
-      // iOS специфичные настройки
-      devOptions: {
-        enabled: true,
-        type: 'module',
-        navigateFallback: 'index.html'
       }
     })
   ],
-  
-  // Для iOS важно минимизировать
-  build: {
-    outDir: 'dist',
-    sourcemap: false,
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true
-      }
-    }
+  server: {
+    host: true,
+    port: 5173
   }
 })

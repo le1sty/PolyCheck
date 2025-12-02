@@ -1,46 +1,100 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  
-  <!-- Обязательные PWA теги -->
-  <meta name="theme-color" content="#4f46e5">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="MyPWA">
-  
-  <!-- iOS специфичные теги -->
-  <meta name="format-detection" content="telephone=no">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-touch-fullscreen" content="yes">
-  
-  <!-- Splash screen для iOS -->
-  <link rel="apple-touch-startup-image" href="/splash.png">
-  
-  <!-- Иконки для iOS разных размеров -->
-  <link rel="apple-touch-icon" href="/icons/icon-180x180.png">
-  <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png">
-  <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-167x167.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180x180.png">
-  
-  <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="icon" type="image/png" href="/favicon.png">
-  
-  <title>My PWA App</title>
-  
-  <!-- iOS статус бар цвет -->
-  <style>
-    /* Для iOS Safari */
-    @media (display-mode: standalone) {
-      body {
-        background-color: #4f46e5;
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="StudentTracker">
+    
+    <!-- PWA мета-теги -->
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="description" content="StudentTracker - приложение для самоотчетности студентов">
+    
+    <!-- Для iOS -->
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    
+    <!-- Для Android -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <title>StudentTracker</title>
+    
+    <style>
+      /* Убираем стандартные браузерные стили */
+      * {
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
       }
-    }
-  </style>
-</head>
-<body>
-  <div id="app"></div>
-  <script type="module" src="/src/main.jsx"></script>
-</body>
+      
+      /* Скрываем скроллбар для приложения */
+      ::-webkit-scrollbar {
+        display: none;
+      }
+      
+      html {
+        -webkit-text-size-adjust: 100%;
+      }
+      
+      body {
+        overscroll-behavior: none;
+        -webkit-overflow-scrolling: touch;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.jsx"></script>
+    
+    <!-- PWA установка -->
+    <script>
+      // Установка Service Worker
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+              console.log('ServiceWorker зарегистрирован:', registration);
+            })
+            .catch(error => {
+              console.log('Ошибка регистрации ServiceWorker:', error);
+            });
+        });
+      }
+      
+      // Установка PWA
+      let deferredPrompt;
+      
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        
+        // Можно показать кнопку установки
+        setTimeout(() => {
+          if (deferredPrompt) {
+            // Показываем предложение установить приложение
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+              if (choiceResult.outcome === 'accepted') {
+                console.log('Пользователь установил приложение');
+              } else {
+                console.log('Пользователь отказался от установки');
+              }
+              deferredPrompt = null;
+            });
+          }
+        }, 3000);
+      });
+      
+      // Проверяем, запущено ли приложение в standalone режиме
+      window.addEventListener('DOMContentLoaded', () => {
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+          console.log('Запущено в standalone режиме');
+          document.body.classList.add('standalone');
+        } else if (window.navigator.standalone === true) {
+          console.log('Запущено на iOS в standalone режиме');
+          document.body.classList.add('standalone');
+        }
+      });
+    </script>
+  </body>
 </html>
