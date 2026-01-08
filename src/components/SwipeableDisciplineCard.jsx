@@ -6,7 +6,6 @@ export function SwipeableDisciplineCard({ discipline, onClick, onDelete }) {
   const [translateX, setTranslateX] = useState(0)
   const touchStartX = useRef(0)
   const touchStartY = useRef(0)
-  const cardRef = useRef(null)
   
   const handleTouchStart = (e) => {
     const touch = e.touches[0]
@@ -43,19 +42,13 @@ export function SwipeableDisciplineCard({ discipline, onClick, onDelete }) {
   const handleTouchEnd = () => {
     setIsSwiping(false)
     
-    // Если свайпнули достаточно далеко влево, показываем подтверждение удаления
+    // Если свайпнули достаточно далеко влево, вызываем onDelete
     if (translateX < -100) {
       setTranslateX(0)
-      showDeleteConfirmation()
+      onDelete(discipline.id) // Просто вызываем переданную функцию
     } else {
       // Иначе возвращаем на место
       setTranslateX(0)
-    }
-  }
-  
-  const showDeleteConfirmation = () => {
-    if (confirm(`Удалить дисциплину "${discipline.name}"? Все задачи этой дисциплины также будут удалены.`)) {
-      onDelete(discipline.id)
     }
   }
   
@@ -65,7 +58,6 @@ export function SwipeableDisciplineCard({ discipline, onClick, onDelete }) {
   
   return (
     <div
-      ref={cardRef}
       style={{
         ...styles.cardWrapper,
         transform: `translateX(${translateX}px)`,
