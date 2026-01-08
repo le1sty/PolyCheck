@@ -1,6 +1,6 @@
 import { useStore } from '../store'
 
-export function Profile() {
+export function Profile({ navigate }) {
   const { user, logout, toggleTheme, settings } = useStore()
   
   const handleLogout = () => {
@@ -11,7 +11,6 @@ export function Profile() {
   return (
     <div style={styles.page}>
       <div style={styles.header}>
-        <button onClick={() => window.location.href = '/'} style={styles.backButton}>← Назад</button>
         <h1 style={styles.title}>Профиль</h1>
       </div>
       
@@ -69,14 +68,6 @@ const styles = {
     padding: '1rem',
     borderBottom: '1px solid var(--border)',
     background: 'var(--surface)'
-  },
-  backButton: {
-    background: 'none',
-    border: 'none',
-    color: 'var(--primary)',
-    fontSize: '1rem',
-    cursor: 'pointer',
-    padding: '0.5rem 0'
   },
   title: {
     margin: '0.5rem 0',

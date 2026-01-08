@@ -1,8 +1,11 @@
+import { useState } from 'preact/hooks'
 import { useStore } from '../store'
-import DisciplineCard from '../components/DisciplineCard'
+import { SwipeableDisciplineCard } from '../components/SwipeableDisciplineCard'
 
 export function Home({ navigate }) {
-  const { user, getDisciplinesByGroup, getTasksStats } = useStore()
+  const { user, getDisciplinesByGroup, getTasksStats, addDiscipline, deleteDiscipline } = useStore()
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [newDisciplineName, setNewDisciplineName] = useState('')
   
   const disciplines = user?.groupId 
     ? getDisciplinesByGroup(user.groupId)
@@ -12,6 +15,19 @@ export function Home({ navigate }) {
 
   const handleDisciplineClick = (disciplineId) => {
     navigate('discipline', disciplineId)
+  }
+  
+  const handleDeleteDiscipline = (disciplineId) => {
+    deleteDiscipline(disciplineId)
+  }
+  
+  const handleAddDiscipline = (e) => {
+    e.preventDefault()
+    if (!newDisciplineName.trim()) return
+    
+    addDiscipline(newDisciplineName.trim(), user?.groupId || 'it-101')
+    setNewDisciplineName('')
+    setShowAddForm(false)
   }
 
   return (
@@ -55,20 +71,64 @@ export function Home({ navigate }) {
       <div style={styles.content}>
         <div style={styles.sectionHeader}>
           <h2 style={styles.sectionTitle}>Дисциплины</h2>
+          <button 
+            onClick={() => setShowAddForm(!showAddForm)}
+            style={styles.addButton}
+          >
+            {showAddForm ? '×' : '+'}
+          </button>
         </div>
+        
+        {showAddForm && (
+          <form onSubmit={handleAddDiscipline} style={styles.addForm}>
+            <div style={styles.formGroup}>
+              <input
+                type="text"
+                value={newDisciplineName}
+                onChange={(e) => setNewDisciplineName(e.target.value)}
+                placeholder="Название новой дисциплины"
+                style={styles.input}
+                autoFocus
+              />
+            </div>
+            <div style={styles.formActions}>
+              <button 
+                type="button"
+                onClick={() => setShowAddForm(false)}
+                style={styles.cancelButton}
+              >
+                Отмена
+              </button>
+              <button 
+                type="submit"
+                style={styles.submitButton}
+                disabled={!newDisciplineName.trim()}
+              >
+                Добавить
+              </button>
+            </div>
+          </form>
+        )}
 
         {disciplines.length === 0 ? (
           <div style={styles.emptyState}>
             <h3 style={styles.emptyTitle}>Нет дисциплин</h3>
-            <p style={styles.emptyText}>Добавьте дисциплины в настройках</p>
+            <p style={styles.emptyText}>Добавьте первую дисциплину</p>
+            <button 
+              onClick={() => setShowAddForm(true)}
+              style={styles.addFirstButton}
+            >
+              Добавить дисциплину
+            </button>
           </div>
         ) : (
           <div style={styles.grid}>
             {disciplines.map(discipline => (
-              <DisciplineCard
+              <SwipeableDisciplineCard
                 key={discipline.id}
                 discipline={discipline}
                 onClick={() => handleDisciplineClick(discipline.id)}
+                onDelete={handleDeleteDiscipline}
               />
             ))}
           </div>
@@ -150,6 +210,9 @@ const styles = {
     padding: '1rem'
   },
   sectionHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: '1rem'
   },
   sectionTitle: {
@@ -157,6 +220,62 @@ const styles = {
     color: 'var(--text)',
     fontSize: '1.1rem',
     fontWeight: '400'
+  },
+  addButton: {
+    background: 'var(--primary)',
+    color: 'var(--background)',
+    border: 'none',
+    borderRadius: '50%',
+    width: '36px',
+    height: '36px',
+    fontSize: '1.5rem',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  addForm: {
+    background: 'var(--surface)',
+    borderRadius: '12px',
+    padding: '1rem',
+    marginBottom: '1rem',
+    border: '1px solid var(--border)'
+  },
+  formGroup: {
+    marginBottom: '1rem'
+  },
+  input: {
+    width: '100%',
+    padding: '0.75rem',
+    border: '1px solid var(--border)',
+    borderRadius: '8px',
+    fontSize: '0.95rem',
+    backgroundColor: 'var(--background)',
+    color: 'var(--text)'
+  },
+  formActions: {
+    display: 'flex',
+    gap: '0.5rem'
+  },
+  cancelButton: {
+    flex: 1,
+    background: 'transparent',
+    color: 'var(--text)',
+    border: '1px solid var(--border)',
+    borderRadius: '8px',
+    padding: '0.75rem',
+    fontSize: '0.95rem',
+    cursor: 'pointer'
+  },
+  submitButton: {
+    flex: 1,
+    background: 'var(--primary)',
+    color: 'var(--background)',
+    border: 'none',
+    borderRadius: '8px',
+    padding: '0.75rem',
+    fontSize: '0.95rem',
+    cursor: 'pointer'
   },
   grid: {
     display: 'grid',
@@ -177,8 +296,17 @@ const styles = {
     fontWeight: '400'
   },
   emptyText: {
-    margin: 0,
+    margin: '0 0 1rem 0',
     color: 'var(--text-light)',
     fontSize: '0.9rem'
+  },
+  addFirstButton: {
+    background: 'var(--primary)',
+    color: 'var(--background)',
+    border: 'none',
+    borderRadius: '8px',
+    padding: '0.75rem 1.5rem',
+    fontSize: '0.95rem',
+    cursor: 'pointer'
   }
 }

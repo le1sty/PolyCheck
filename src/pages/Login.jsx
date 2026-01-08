@@ -1,12 +1,16 @@
 import { useState } from 'preact/hooks'
 import { useStore, mockUsers } from '../store'
 
-export function Login() {
+export function Login({ navigate }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { login } = useStore()
+  const [isRegister, setIsRegister] = useState(false)
+  const [group, setGroup] = useState('it-101')
+  const { login, register, getAllGroups } = useStore()
+  
+  const groups = getAllGroups()
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -14,18 +18,29 @@ export function Login() {
     setLoading(true)
 
     setTimeout(() => {
-      const userExists = mockUsers.find(
-        user => user.email === email && user.password === password
-      )
+      try {
+        if (isRegister) {
+          // Регистрация
+          register(email, password, group)
+        } else {
+          // Вход
+          const userExists = mockUsers.find(
+            user => user.email === email && user.password === password
+          )
 
-      if (!userExists) {
-        setError('Неверный email или пароль')
+          if (!userExists) {
+            setError('Неверный email или пароль')
+            setLoading(false)
+            return
+          }
+
+          login(email)
+        }
+      } catch (err) {
+        setError(err.message)
+      } finally {
         setLoading(false)
-        return
       }
-
-      login(email)
-      setLoading(false)
     }, 500)
   }
 
@@ -42,9 +57,11 @@ export function Login() {
         </div>
 
         <div style={styles.card}>
-          <h2 style={styles.cardTitle}>Вход</h2>
+          <h2 style={styles.cardTitle}>{isRegister ? 'Регистрация' : 'Вход'}</h2>
           <p style={styles.description}>
-            Войдите для отслеживания учебного прогресса
+            {isRegister 
+              ? 'Создайте аккаунт для отслеживания учебного прогресса'
+              : 'Войдите для отслеживания учебного прогресса'}
           </p>
 
           <form onSubmit={handleSubmit} style={styles.form}>
@@ -73,8 +90,29 @@ export function Login() {
                 required
                 disabled={loading}
                 style={styles.input}
+                minLength={6}
               />
             </div>
+            
+            {isRegister && (
+              <div style={styles.formGroup}>
+                <label htmlFor="group" style={styles.label}>Группа</label>
+                <select
+                  id="group"
+                  value={group}
+                  onChange={(e) => setGroup(e.target.value)}
+                  required
+                  disabled={loading}
+                  style={styles.select}
+                >
+                  {groups.map(g => (
+                    <option key={g.id} value={g.id}>
+                      {g.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {error && <div style={styles.error}>{error}</div>}
 
@@ -83,7 +121,9 @@ export function Login() {
               style={styles.primaryBtn}
               disabled={loading}
             >
-              {loading ? 'Вход...' : 'Войти'}
+              {loading 
+                ? (isRegister ? 'Регистрация...' : 'Вход...')
+                : (isRegister ? 'Зарегистрироваться' : 'Войти')}
             </button>
           </form>
 
@@ -91,21 +131,45 @@ export function Login() {
             <span>или</span>
           </div>
 
-          <button 
-            onClick={handleDemoLogin}
-            style={styles.secondaryBtn}
-            disabled={loading}
-          >
-            Войти как демо-пользователь
-          </button>
+          {!isRegister && (
+            <>
+              <button 
+                onClick={handleDemoLogin}
+                style={styles.secondaryBtn}
+                disabled={loading}
+              >
+                Войти как демо-пользователь
+              </button>
 
-          <div style={styles.footer}>
-            <p>Для демо-версии используйте:</p>
-            <p style={styles.hint}>
-              Email: student@university.ru<br />
-              Пароль: 123456
-            </p>
-          </div>
+              <div style={styles.footer}>
+                <p>Нет аккаунта? <button 
+                  onClick={() => setIsRegister(true)} 
+                  style={styles.linkButton}
+                  disabled={loading}
+                >
+                  Зарегистрироваться
+                </button></p>
+                
+                <p style={styles.hint}>
+                  Для демо-версии используйте:<br />
+                  Email: student@university.ru<br />
+                  Пароль: 123456
+                </p>
+              </div>
+            </>
+          )}
+          
+          {isRegister && (
+            <div style={styles.footer}>
+              <p>Уже есть аккаунт? <button 
+                onClick={() => setIsRegister(false)} 
+                style={styles.linkButton}
+                disabled={loading}
+              >
+                Войти
+              </button></p>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -180,6 +244,18 @@ const styles = {
     color: 'white',
     transition: 'border-color 0.2s'
   },
+  select: {
+    width: '100%',
+    padding: '0.75rem 1rem',
+    border: '1px solid #333333',
+    borderRadius: '8px',
+    fontSize: '1rem',
+    background: '#000000',
+    color: 'white',
+    transition: 'border-color 0.2s',
+    appearance: 'none',
+    WebkitAppearance: 'none'
+  },
   error: {
     background: 'rgba(255, 68, 68, 0.1)',
     color: '#ff4444',
@@ -226,6 +302,15 @@ const styles = {
     textAlign: 'center',
     color: '#666666',
     fontSize: '0.875rem'
+  },
+  linkButton: {
+    background: 'none',
+    border: 'none',
+    color: 'white',
+    textDecoration: 'underline',
+    cursor: 'pointer',
+    fontSize: '0.875rem',
+    padding: '0'
   },
   hint: {
     marginTop: '0.75rem',

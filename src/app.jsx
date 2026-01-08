@@ -55,6 +55,8 @@ export function App() {
       setDisciplineId(id)
     } else if (initialPath === '/profile') {
       setCurrentPage('profile')
+    } else if (initialPath === '/login') {
+      setCurrentPage('login')
     }
     
     return () => window.removeEventListener('popstate', handlePopState)

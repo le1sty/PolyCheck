@@ -32,6 +32,27 @@ export const useStore = create(
       
       isOnline: true,
       
+      // Регистрация нового пользователя
+      register: (email, password, groupId) => set(state => {
+        const existingUser = mockUsers.find(u => u.email === email);
+        if (existingUser) {
+          throw new Error('Пользователь с таким email уже существует');
+        }
+        
+        // Добавляем пользователя в mockUsers
+        mockUsers.push({ email, password });
+        
+        return {
+          user: {
+            id: Date.now().toString(),
+            email,
+            name: email.split('@')[0],
+            groupId,
+            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`
+          }
+        };
+      }),
+      
       login: (email) => set({ 
         user: { 
           id: Date.now().toString(), 
@@ -43,6 +64,33 @@ export const useStore = create(
       }),
       
       logout: () => set({ user: null }),
+      
+      // Добавление новой дисциплины
+      addDiscipline: (name, groupId) => set(state => ({
+        disciplines: [
+          ...state.disciplines,
+          {
+            id: `discipline-${Date.now()}`,
+            name,
+            groupId,
+            color: '#ffffff'
+          }
+        ]
+      })),
+      
+      // Удаление дисциплины и всех ее задач
+      deleteDiscipline: (disciplineId) => set(state => {
+        // Сначала удаляем все задачи этой дисциплины
+        const updatedTasks = state.tasks.filter(task => task.disciplineId !== disciplineId);
+        
+        // Затем удаляем саму дисциплину
+        const updatedDisciplines = state.disciplines.filter(d => d.id !== disciplineId);
+        
+        return {
+          disciplines: updatedDisciplines,
+          tasks: updatedTasks
+        };
+      }),
       
       addTask: (disciplineId, title, type) => set(state => ({
         tasks: [
@@ -68,12 +116,12 @@ export const useStore = create(
       })),
       
       toggleTheme: () => set(state => {
-        const newTheme = state.settings.theme === 'dark' ? 'light' : 'dark'
+        const newTheme = state.settings.theme === 'dark' ? 'light' : 'dark';
         
         if (newTheme === 'light') {
-          document.documentElement.setAttribute('data-theme', 'light')
+          document.documentElement.setAttribute('data-theme', 'light');
         } else {
-          document.documentElement.removeAttribute('data-theme')
+          document.documentElement.removeAttribute('data-theme');
         }
         
         return {
@@ -81,37 +129,42 @@ export const useStore = create(
             ...state.settings, 
             theme: newTheme
           }
-        }
+        };
       }),
       
       setOnlineStatus: (status) => set({ isOnline: status }),
       
+      // Получение всех групп для регистрации
+      getAllGroups: () => {
+        return get().groups;
+      },
+      
       getDisciplinesByGroup: (groupId) => {
-        const { disciplines, tasks } = get()
+        const { disciplines, tasks } = get();
         return disciplines
           .filter(d => d.groupId === groupId)
           .map(discipline => {
-            const disciplineTasks = tasks.filter(t => t.disciplineId === discipline.id)
-            const completedCount = disciplineTasks.filter(t => t.completed).length
-            const totalCount = disciplineTasks.length
+            const disciplineTasks = tasks.filter(t => t.disciplineId === discipline.id);
+            const completedCount = disciplineTasks.filter(t => t.completed).length;
+            const totalCount = disciplineTasks.length;
             
             return {
               ...discipline,
               progress: totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0,
               completedCount,
               totalCount
-            }
-          })
+            };
+          });
       },
       
       getDisciplineById: (disciplineId) => {
-        const { disciplines, tasks } = get()
-        const discipline = disciplines.find(d => d.id === disciplineId)
-        if (!discipline) return null
+        const { disciplines, tasks } = get();
+        const discipline = disciplines.find(d => d.id === disciplineId);
+        if (!discipline) return null;
         
-        const disciplineTasks = tasks.filter(t => t.disciplineId === disciplineId)
-        const completedCount = disciplineTasks.filter(t => t.completed).length
-        const totalCount = disciplineTasks.length
+        const disciplineTasks = tasks.filter(t => t.disciplineId === disciplineId);
+        const completedCount = disciplineTasks.filter(t => t.completed).length;
+        const totalCount = disciplineTasks.length;
         
         return {
           ...discipline,
@@ -119,20 +172,20 @@ export const useStore = create(
           progress: totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0,
           completedCount,
           totalCount
-        }
+        };
       },
 
       getTasksStats: () => {
-        const { tasks } = get()
-        const completed = tasks.filter(t => t.completed).length
-        const total = tasks.length
-        const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0
+        const { tasks } = get();
+        const completed = tasks.filter(t => t.completed).length;
+        const total = tasks.length;
+        const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
         
         return {
           completed,
           total,
           completionRate
-        }
+        };
       }
     }),
     {
@@ -140,14 +193,14 @@ export const useStore = create(
       getStorage: () => localStorage,
       onRehydrateStorage: () => (state) => {
         if (state?.settings?.theme === 'light') {
-          document.documentElement.setAttribute('data-theme', 'light')
+          document.documentElement.setAttribute('data-theme', 'light');
         }
       }
     }
   )
-)
+);
 
 export const mockUsers = [
   { email: 'student@university.ru', password: '123456' },
   { email: 'test@test.com', password: 'test123' }
-]
+];
