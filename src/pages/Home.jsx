@@ -11,33 +11,25 @@ export function Home({ navigate }) {
   const stats = getTasksStats?.() || { completed: 0, total: 0, completionRate: 0 }
 
   const handleDisciplineClick = (disciplineId) => {
-    console.log('Переход к дисциплине:', disciplineId)
     navigate('discipline', disciplineId)
   }
 
   return (
     <div style={styles.page}>
-      {/* Шапка с прогрессом */}
       <div style={styles.header}>
         <div style={styles.userInfo}>
-          <img 
-            src={user?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=student'} 
-            alt="Аватар" 
-            style={styles.avatar}
-          />
           <div style={styles.userDetails}>
-            <h2 style={styles.userName}>{user?.name || 'Студент'}</h2>
+            <h2 style={styles.userName}>{user?.name}</h2>
             <p style={styles.groupName}>
-              Группа: {user?.groupId 
+              {user?.groupId 
                 ? useStore.getState().groups.find(g => g.id === user.groupId)?.name 
-                : 'ИТ-101 (демо)'}
+                : 'ИТ-101'}
             </p>
           </div>
         </div>
 
         <div style={styles.stats}>
           <div style={styles.statCard}>
-            <div style={styles.statIcon}>📚</div>
             <div style={styles.statContent}>
               <span style={styles.statValue}>{disciplines.length}</span>
               <span style={styles.statLabel}>Дисциплин</span>
@@ -45,7 +37,6 @@ export function Home({ navigate }) {
           </div>
           
           <div style={styles.statCard}>
-            <div style={styles.statIcon}>✅</div>
             <div style={styles.statContent}>
               <span style={styles.statValue}>{stats.completed}</span>
               <span style={styles.statLabel}>Выполнено</span>
@@ -53,7 +44,6 @@ export function Home({ navigate }) {
           </div>
           
           <div style={styles.statCard}>
-            <div style={styles.statIcon}>🎯</div>
             <div style={styles.statContent}>
               <span style={styles.statValue}>{stats.completionRate || 0}%</span>
               <span style={styles.statLabel}>Прогресс</span>
@@ -62,23 +52,15 @@ export function Home({ navigate }) {
         </div>
       </div>
 
-      {/* Список дисциплин */}
       <div style={styles.content}>
         <div style={styles.sectionHeader}>
-          <h2 style={styles.sectionTitle}>Мои дисциплины</h2>
+          <h2 style={styles.sectionTitle}>Дисциплины</h2>
         </div>
 
         {disciplines.length === 0 ? (
           <div style={styles.emptyState}>
-            <div style={styles.emptyIcon}>📚</div>
             <h3 style={styles.emptyTitle}>Нет дисциплин</h3>
-            <p style={styles.emptyText}>Выберите группу чтобы увидеть дисциплины</p>
-            <button 
-              onClick={() => navigate('group-select')}
-              style={styles.primaryBtn}
-            >
-              Выбрать группу
-            </button>
+            <p style={styles.emptyText}>Добавьте дисциплины в настройках</p>
           </div>
         ) : (
           <div style={styles.grid}>
@@ -98,16 +80,14 @@ export function Home({ navigate }) {
 
 const styles = {
   page: {
-    paddingBottom: '5rem',
-    minHeight: '100vh',
+    minHeight: 'calc(100vh - 70px)',
     backgroundColor: 'var(--background)'
   },
   header: {
-    background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-    color: 'white',
+    background: 'var(--surface)',
+    color: 'var(--text)',
     padding: '1rem',
-    marginBottom: '1rem',
-    // Убираем фиксацию - это обычный блок
+    borderBottom: '1px solid var(--border)'
   },
   userInfo: {
     display: 'flex',
@@ -117,26 +97,19 @@ const styles = {
   },
   userDetails: {
     flex: 1,
-    minWidth: 0 // Чтобы текст не выходил за границы
-  },
-  avatar: {
-    width: '50px',
-    height: '50px',
-    borderRadius: '50%',
-    border: '2px solid white',
-    flexShrink: 0
+    minWidth: 0
   },
   userName: {
     margin: 0,
     fontSize: '1.1rem',
-    fontWeight: '600',
+    fontWeight: '400',
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis'
   },
   groupName: {
     margin: '0.25rem 0 0 0',
-    opacity: 0.9,
+    opacity: 0.7,
     fontSize: '0.8rem',
     whiteSpace: 'nowrap',
     overflow: 'hidden',
@@ -148,19 +121,10 @@ const styles = {
     gap: '0.5rem'
   },
   statCard: {
-    background: 'rgba(255, 255, 255, 0.15)',
-    backdropFilter: 'blur(10px)',
+    background: 'var(--background)',
     borderRadius: '8px',
     padding: '0.75rem 0.5rem',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    minWidth: 0 // Для правильного сжатия на мобильных
-  },
-  statIcon: {
-    fontSize: '1.1rem',
-    opacity: 0.9,
-    flexShrink: 0
+    border: '1px solid var(--border)'
   },
   statContent: {
     flex: 1,
@@ -169,7 +133,7 @@ const styles = {
   statValue: {
     display: 'block',
     fontSize: '1rem',
-    fontWeight: 'bold',
+    fontWeight: '500',
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis'
@@ -177,13 +141,13 @@ const styles = {
   statLabel: {
     display: 'block',
     fontSize: '0.7rem',
-    opacity: 0.9,
+    opacity: 0.7,
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis'
   },
   content: {
-    padding: '0.75rem'
+    padding: '1rem'
   },
   sectionHeader: {
     marginBottom: '1rem'
@@ -192,7 +156,7 @@ const styles = {
     margin: 0,
     color: 'var(--text)',
     fontSize: '1.1rem',
-    fontWeight: '600'
+    fontWeight: '400'
   },
   grid: {
     display: 'grid',
@@ -201,37 +165,20 @@ const styles = {
   },
   emptyState: {
     textAlign: 'center',
-    padding: '2rem 1rem',
+    padding: '3rem 1rem',
     background: 'var(--surface)',
     borderRadius: '12px',
-    boxShadow: 'var(--shadow)',
-    marginTop: '1rem'
-  },
-  emptyIcon: {
-    fontSize: '3rem',
-    marginBottom: '1rem',
-    color: 'var(--text-light)'
+    border: '1px solid var(--border)'
   },
   emptyTitle: {
     margin: '0 0 0.5rem 0',
     color: 'var(--text)',
-    fontSize: '1.1rem'
+    fontSize: '1.1rem',
+    fontWeight: '400'
   },
   emptyText: {
-    margin: '0 0 1.5rem 0',
+    margin: 0,
     color: 'var(--text-light)',
     fontSize: '0.9rem'
-  },
-  primaryBtn: {
-    background: 'var(--primary)',
-    color: 'white',
-    border: 'none',
-    padding: '0.75rem 1.5rem',
-    borderRadius: '8px',
-    fontSize: '0.9rem',
-    fontWeight: 500,
-    cursor: 'pointer',
-    width: '100%',
-    maxWidth: '200px'
   }
 }

@@ -4,55 +4,45 @@ import { persist } from 'zustand/middleware'
 export const useStore = create(
   persist(
     (set, get) => ({
-      // Пользователь
       user: null,
       
-      // Группы
       groups: [
         { id: 'it-101', name: 'ИТ-101', faculty: 'Информационные технологии' },
         { id: 'it-102', name: 'ИТ-102', faculty: 'Информационные технологии' },
         { id: 'cs-201', name: 'КС-201', faculty: 'Компьютерные науки' },
       ],
       
-      // Дисциплины
       disciplines: [
-        { id: 'math-1', name: 'Математический анализ', groupId: 'it-101', color: '#4f46e5' },
-        { id: 'prog-1', name: 'Программирование', groupId: 'it-101', color: '#10b981' },
-        { id: 'web-1', name: 'Веб-технологии', groupId: 'it-101', color: '#f59e0b' },
-        { id: 'db-1', name: 'Базы данных', groupId: 'it-101', color: '#ef4444' },
+        { id: 'math-1', name: 'Математический анализ', groupId: 'it-101', color: '#ffffff' },
+        { id: 'prog-1', name: 'Программирование', groupId: 'it-101', color: '#888888' },
+        { id: 'web-1', name: 'Веб-технологии', groupId: 'it-101', color: '#444444' },
+        { id: 'db-1', name: 'Базы данных', groupId: 'it-101', color: '#222222' },
       ],
       
-      // Задачи
       tasks: [
         { id: '1', disciplineId: 'math-1', title: 'Домашнее задание 1', type: 'homework', completed: true },
         { id: '2', disciplineId: 'math-1', title: 'Контрольная работа', type: 'test', completed: false },
         { id: '3', disciplineId: 'prog-1', title: 'Лабораторная работа', type: 'lab', completed: true },
       ],
       
-      // Настройки
       settings: {
-        theme: 'light', // По умолчанию светлая тема
+        theme: 'dark',
         notifications: true
       },
       
-      // Онлайн статус
       isOnline: true,
       
-      // Действия
       login: (email) => set({ 
         user: { 
           id: Date.now().toString(), 
           email, 
           name: email.split('@')[0],
+          groupId: 'it-101',
           avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`
         } 
       }),
       
       logout: () => set({ user: null }),
-      
-      selectGroup: (groupId) => set(state => ({
-        user: state.user ? { ...state.user, groupId } : null
-      })),
       
       addTask: (disciplineId, title, type) => set(state => ({
         tasks: [
@@ -78,11 +68,10 @@ export const useStore = create(
       })),
       
       toggleTheme: () => set(state => {
-        const newTheme = state.settings.theme === 'light' ? 'dark' : 'light'
+        const newTheme = state.settings.theme === 'dark' ? 'light' : 'dark'
         
-        // Применяем тему к документу
-        if (newTheme === 'dark') {
-          document.documentElement.setAttribute('data-theme', 'dark')
+        if (newTheme === 'light') {
+          document.documentElement.setAttribute('data-theme', 'light')
         } else {
           document.documentElement.removeAttribute('data-theme')
         }
@@ -97,7 +86,6 @@ export const useStore = create(
       
       setOnlineStatus: (status) => set({ isOnline: status }),
       
-      // Геттеры
       getDisciplinesByGroup: (groupId) => {
         const { disciplines, tasks } = get()
         return disciplines
@@ -148,19 +136,17 @@ export const useStore = create(
       }
     }),
     {
-      name: 'student-tracker-storage',
+      name: 'poly-stats-storage',
       getStorage: () => localStorage,
-      // При загрузке из localStorage применяем сохраненную тему
       onRehydrateStorage: () => (state) => {
-        if (state?.settings?.theme === 'dark') {
-          document.documentElement.setAttribute('data-theme', 'dark')
+        if (state?.settings?.theme === 'light') {
+          document.documentElement.setAttribute('data-theme', 'light')
         }
       }
     }
   )
 )
 
-// Моковые пользователи для тестирования
 export const mockUsers = [
   { email: 'student@university.ru', password: '123456' },
   { email: 'test@test.com', password: 'test123' }

@@ -13,7 +13,6 @@ export function Login() {
     setError('')
     setLoading(true)
 
-    // Имитация задержки сети
     setTimeout(() => {
       const userExists = mockUsers.find(
         user => user.email === email && user.password === password
@@ -38,19 +37,19 @@ export function Login() {
     <div style={styles.page}>
       <div style={styles.container}>
         <div style={styles.header}>
-          <h1 style={styles.title}>📚 StudentTracker</h1>
-          <p style={styles.subtitle}>Самоотчетность для студентов</p>
+          <h1 style={styles.title}>PolyStats</h1>
+          <p style={styles.subtitle}>Минималистичный трекер прогресса</p>
         </div>
 
         <div style={styles.card}>
-          <h2 style={styles.cardTitle}>Вход в систему</h2>
+          <h2 style={styles.cardTitle}>Вход</h2>
           <p style={styles.description}>
-            Войдите, чтобы отслеживать прогресс по дисциплинам
+            Войдите для отслеживания учебного прогресса
           </p>
 
           <form onSubmit={handleSubmit} style={styles.form}>
             <div style={styles.formGroup}>
-              <label htmlFor="email" style={styles.label}>Email университета</label>
+              <label htmlFor="email" style={styles.label}>Email</label>
               <input
                 id="email"
                 type="email"
@@ -97,7 +96,7 @@ export function Login() {
             style={styles.secondaryBtn}
             disabled={loading}
           >
-            🎓 Войти как демо-студент
+            Войти как демо-пользователь
           </button>
 
           <div style={styles.footer}>
@@ -119,7 +118,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    background: '#000000',
     padding: '1rem'
   },
   container: {
@@ -133,25 +132,30 @@ const styles = {
   },
   title: {
     fontSize: '2.5rem',
-    marginBottom: '0.5rem'
+    marginBottom: '0.5rem',
+    fontWeight: '300'
   },
   subtitle: {
-    fontSize: '1.1rem',
-    opacity: 0.9
+    fontSize: '1rem',
+    opacity: 0.7
   },
   card: {
-    background: 'white',
-    borderRadius: '16px',
+    background: '#111111',
+    borderRadius: '12px',
     padding: '2rem',
-    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)'
+    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)',
+    border: '1px solid #222222'
   },
   cardTitle: {
     marginBottom: '0.5rem',
-    color: '#333'
+    color: 'white',
+    fontSize: '1.5rem',
+    fontWeight: '400'
   },
   description: {
-    color: '#666',
-    marginBottom: '1.5rem'
+    color: '#888888',
+    marginBottom: '1.5rem',
+    fontSize: '0.9rem'
   },
   form: {
     marginBottom: '1.5rem'
@@ -162,24 +166,28 @@ const styles = {
   label: {
     display: 'block',
     marginBottom: '0.5rem',
-    fontWeight: 500,
-    color: '#333'
+    fontWeight: 400,
+    color: 'white',
+    fontSize: '0.9rem'
   },
   input: {
     width: '100%',
     padding: '0.75rem 1rem',
-    border: '2px solid #e5e7eb',
+    border: '1px solid #333333',
     borderRadius: '8px',
     fontSize: '1rem',
+    background: '#000000',
+    color: 'white',
     transition: 'border-color 0.2s'
   },
   error: {
-    background: '#fee2e2',
-    color: '#dc2626',
+    background: 'rgba(255, 68, 68, 0.1)',
+    color: '#ff4444',
     padding: '0.75rem',
     borderRadius: '8px',
     marginBottom: '1rem',
-    fontSize: '0.875rem'
+    fontSize: '0.875rem',
+    border: '1px solid rgba(255, 68, 68, 0.2)'
   },
   primaryBtn: {
     width: '100%',
@@ -187,44 +195,44 @@ const styles = {
     border: 'none',
     borderRadius: '8px',
     fontSize: '1rem',
-    fontWeight: 600,
+    fontWeight: 500,
     cursor: 'pointer',
     transition: 'all 0.2s',
     marginBottom: '0.75rem',
-    background: '#4f46e5',
-    color: 'white'
+    background: 'white',
+    color: 'black'
   },
   divider: {
     display: 'flex',
     alignItems: 'center',
     margin: '1.5rem 0',
-    color: '#6b7280'
+    color: '#666666'
   },
   secondaryBtn: {
     width: '100%',
     padding: '0.875rem',
-    border: 'none',
+    border: '1px solid #333333',
     borderRadius: '8px',
     fontSize: '1rem',
-    fontWeight: 600,
+    fontWeight: 500,
     cursor: 'pointer',
     transition: 'all 0.2s',
     marginBottom: '0.75rem',
-    background: '#f3f4f6',
-    color: '#374151',
-    border: '1px solid #d1d5db'
+    background: 'transparent',
+    color: 'white'
   },
   footer: {
     marginTop: '1.5rem',
     textAlign: 'center',
-    color: '#6b7280',
+    color: '#666666',
     fontSize: '0.875rem'
   },
   hint: {
     marginTop: '0.75rem',
     padding: '0.75rem',
-    background: '#f3f4f6',
+    background: 'rgba(255, 255, 255, 0.05)',
     borderRadius: '8px',
-    fontSize: '0.75rem'
+    fontSize: '0.75rem',
+    color: '#888888'
   }
 }

@@ -7,22 +7,22 @@
 }
 
 :root {
-  /* Светлая тема (по умолчанию) */
-  --primary: #4f46e5;
-  --primary-dark: #4338ca;
-  --primary-light: #818cf8;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --info: #3b82f6;
-  --background: #f9fafb;
-  --surface: #ffffff;
-  --text: #1f2937;
-  --text-light: #6b7280;
-  --border: #e5e7eb;
-  --radius: 12px;
-  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  /* Минималистичная темная тема (по умолчанию) */
+  --primary: #ffffff;
+  --primary-dark: #cccccc;
+  --primary-light: #666666;
+  --success: #00ff88;
+  --warning: #ffaa00;
+  --danger: #ff4444;
+  --info: #0088ff;
+  --background: #000000;
+  --surface: #111111;
+  --text: #ffffff;
+  --text-light: #888888;
+  --border: #222222;
+  --radius: 8px;
+  --shadow: 0 1px 3px 0 rgba(255, 255, 255, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(255, 255, 255, 0.07);
   
   /* Для PWA */
   --safe-area-top: env(safe-area-inset-top, 0px);
@@ -31,22 +31,22 @@
   --safe-area-right: env(safe-area-inset-right, 0px);
 }
 
-/* Темная тема */
-[data-theme="dark"] {
-  --primary: #818cf8;
-  --primary-dark: #6366f1;
-  --primary-light: #a5b4fc;
-  --success: #34d399;
-  --warning: #fbbf24;
-  --danger: #f87171;
-  --info: #60a5fa;
-  --background: #111827;
-  --surface: #1f2937;
-  --text: #f9fafb;
-  --text-light: #d1d5db;
-  --border: #374151;
-  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.3);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3);
+/* Светлая тема (опционально) */
+[data-theme="light"] {
+  --primary: #000000;
+  --primary-dark: #333333;
+  --primary-light: #666666;
+  --success: #00aa55;
+  --warning: #cc8800;
+  --danger: #cc3333;
+  --info: #0066cc;
+  --background: #ffffff;
+  --surface: #f5f5f5;
+  --text: #000000;
+  --text-light: #666666;
+  --border: #dddddd;
+  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.07);
 }
 
 body {
@@ -72,49 +72,59 @@ body {
   overflow: hidden;
 }
 
-/* Общие стили для приложения */
 .app {
   width: 100%;
   height: 100vh;
   height: -webkit-fill-available;
-  height: calc(100vh - var(--safe-area-top) - var(--safe-area-bottom));
+  height: calc(100vh - var(--safe-area-top));
   display: flex;
   flex-direction: column;
   background: var(--background);
   position: relative;
   padding-top: var(--safe-area-top);
-  padding-bottom: var(--safe-area-bottom);
   padding-left: var(--safe-area-left);
   padding-right: var(--safe-area-right);
   transition: background-color 0.3s ease;
 }
 
-.main {
+/* Основной контейнер для контента с прокруткой */
+.scrollable-content {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   position: relative;
+  padding-bottom: 70px; /* Отступ для навигации */
 }
 
-/* Убираем скроллбар */
-.main::-webkit-scrollbar {
+.scrollable-content::-webkit-scrollbar {
   display: none;
 }
 
-.main {
+.scrollable-content {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
-/* Header должен скроллиться вместе с контентом */
-.header {
-  position: relative !important;
-  top: auto !important;
-  z-index: auto !important;
+/* Фиксированная навигация */
+.fixed-bottom {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  transform: translateY(0);
 }
 
-/* Общие классы */
+/* Для standalone режима PWA */
+.standalone .app {
+  height: 100vh;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
 .card {
   background: var(--surface);
   border-radius: var(--radius);
@@ -144,17 +154,17 @@ body {
 
 .btn-primary {
   background: var(--primary);
-  color: white;
+  color: var(--background);
 }
 
 .btn-primary:hover {
   background: var(--primary-dark);
 }
 
-/* Адаптивность */
 @media (max-width: 640px) {
-  .main {
+  .scrollable-content {
     padding: 0.5rem;
+    padding-bottom: 70px;
   }
   
   .card {
@@ -163,26 +173,23 @@ body {
   }
 }
 
-/* Улучшаем touch targets для мобильных */
 button, 
 input, 
 select, 
 textarea {
-  font-size: 16px; /* Предотвращает масштабирование в iOS */
+  font-size: 16px;
   min-height: 44px;
   min-width: 44px;
 }
 
-/* Убираем синий highlight на iOS */
 input, 
 textarea, 
 button, 
 select, 
 a {
-  -webkit-tap-highlight-color: rgba(0,0,0,0);
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* Улучшаем читаемость на мобильных */
 h1, h2, h3, h4, h5, h6 {
   line-height: 1.2;
 }
@@ -191,11 +198,10 @@ p {
   margin-bottom: 1rem;
 }
 
-/* Утилитарные классы */
 .text-ellipsis {
   white-space: nowrap;
   overflow: hidden;
-  textOverflow: ellipsis;
+  text-overflow: ellipsis;
 }
 
 .flex-shrink-0 {
@@ -210,49 +216,45 @@ p {
   min-width: 0;
 }
 
-/* Плавные переходы для всех элементов */
 * {
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* Специфические стили для темной темы */
-[data-theme="dark"] .card {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+[data-theme="light"] .card {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-[data-theme="dark"] input,
-[data-theme="dark"] textarea {
+[data-theme="light"] input,
+[data-theme="light"] textarea {
   background-color: var(--surface);
   color: var(--text);
   border-color: var(--border);
 }
 
-[data-theme="dark"] input::placeholder {
+[data-theme="light"] input::placeholder {
   color: var(--text-light);
 }
 
-/* Градиенты остаются одинаковыми в обеих темах */
 .gradient-bg {
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #000000 0%, #222222 100%);
 }
 
-/* Стили для состояний */
 .status-online {
-  background: #d1fae5;
-  color: #065f46;
+  background: rgba(0, 255, 136, 0.1);
+  color: #00ff88;
 }
 
-[data-theme="dark"] .status-online {
-  background: #064e3b;
-  color: #a7f3d0;
+[data-theme="light"] .status-online {
+  background: rgba(0, 170, 85, 0.1);
+  color: #00aa55;
 }
 
 .status-offline {
-  background: #fee2e2;
-  color: #991b1b;
+  background: rgba(255, 68, 68, 0.1);
+  color: #ff4444;
 }
 
-[data-theme="dark"] .status-offline {
-  background: #7f1d1d;
-  color: #fca5a5;
+[data-theme="light"] .status-offline {
+  background: rgba(204, 51, 51, 0.1);
+  color: #cc3333;
 }

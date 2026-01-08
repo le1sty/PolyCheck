@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'preact/hooks'
+import { useState } from 'preact/hooks'
 import { useStore } from '../store'
 import TaskItem from '../components/TaskItem'
 
@@ -14,7 +14,6 @@ export function DisciplinePage({ disciplineId, navigate }) {
   if (!discipline) {
     return (
       <div style={styles.notFound}>
-        <div style={styles.notFoundIcon}>📚</div>
         <h2 style={styles.notFoundTitle}>Дисциплина не найдена</h2>
         <p style={styles.notFoundText}>ID дисциплины: {disciplineId}</p>
         <button 
@@ -37,17 +36,16 @@ export function DisciplinePage({ disciplineId, navigate }) {
   }
   
   const taskTypes = [
-    { value: 'homework', label: '📝 Домашнее задание', color: '#3b82f6' },
-    { value: 'lab', label: '🔬 Лабораторная работа', color: '#10b981' },
-    { value: 'project', label: '🏗️ Проект', color: '#8b5cf6' },
-    { value: 'test', label: '📋 Контрольная работа', color: '#ef4444' },
-    { value: 'lecture', label: '🎓 Лекция', color: '#f59e0b' }
+    { value: 'homework', label: 'Домашнее задание', color: '#ffffff' },
+    { value: 'lab', label: 'Лабораторная работа', color: '#ffffff' },
+    { value: 'project', label: 'Проект', color: '#ffffff' },
+    { value: 'test', label: 'Контрольная работа', color: '#ffffff' },
+    { value: 'lecture', label: 'Лекция', color: '#ffffff' }
   ]
   
   return (
     <div style={styles.page}>
-      {/* Шапка */}
-      <div style={{ ...styles.header, backgroundColor: discipline.color }}>
+      <div style={styles.header}>
         <button 
           onClick={() => navigate('home')}
           style={styles.backButton}
@@ -62,7 +60,7 @@ export function DisciplinePage({ disciplineId, navigate }) {
         <div style={styles.headerStats}>
           <div style={styles.headerStat}>
             <span style={styles.statValue}>{discipline.completedCount}/{discipline.totalCount}</span>
-            <span style={styles.statLabel}>Задач выполнено</span>
+            <span style={styles.statLabel}>Задач</span>
           </div>
           <div style={styles.headerStat}>
             <span style={styles.statValue}>{discipline.progress}%</span>
@@ -72,14 +70,13 @@ export function DisciplinePage({ disciplineId, navigate }) {
       </div>
       
       <div style={styles.content}>
-        {/* Прогресс бар */}
         <div style={styles.progressSection}>
           <div style={styles.progressBarLarge}>
             <div 
               style={{
                 ...styles.progressFillLarge,
                 width: `${discipline.progress}%`,
-                backgroundColor: discipline.color
+                backgroundColor: '#ffffff'
               }}
             ></div>
           </div>
@@ -89,13 +86,12 @@ export function DisciplinePage({ disciplineId, navigate }) {
           </div>
         </div>
         
-        {/* Форма добавления задачи */}
         <div style={styles.addTaskSection}>
           <button 
             onClick={() => setShowAddForm(!showAddForm)}
             style={styles.addTaskToggle}
           >
-            {showAddForm ? '✕ Отменить' : '+ Добавить новую задачу'}
+            {showAddForm ? '× Отменить' : '+ Добавить задачу'}
           </button>
           
           {showAddForm && (
@@ -124,8 +120,7 @@ export function DisciplinePage({ disciplineId, navigate }) {
                       }}
                       onClick={() => setNewTaskType(type.value)}
                     >
-                      <span style={styles.typeIcon}>{type.label.split(' ')[0]}</span>
-                      <span style={styles.typeText}>{type.label.split(' ').slice(1).join(' ')}</span>
+                      <span style={styles.typeText}>{type.label}</span>
                     </button>
                   ))}
                 </div>
@@ -142,11 +137,9 @@ export function DisciplinePage({ disciplineId, navigate }) {
           )}
         </div>
         
-        {/* Список задач */}
         <div style={styles.tasksSection}>
           {discipline.tasks.length === 0 ? (
             <div style={styles.emptyTasks}>
-              <div style={styles.emptyIcon}>📝</div>
               <h3 style={styles.emptyTitle}>Нет задач</h3>
               <p style={styles.emptyText}>Добавьте первую задачу для этой дисциплины</p>
             </div>
@@ -163,19 +156,19 @@ export function DisciplinePage({ disciplineId, navigate }) {
 
 const styles = {
   page: {
-    paddingBottom: '5rem',
-    minHeight: '100vh',
+    minHeight: 'calc(100vh - 70px)',
     backgroundColor: 'var(--background)'
   },
   header: {
-    color: 'white',
+    color: 'var(--background)',
     padding: '1rem',
-    marginBottom: '1rem'
+    borderBottom: '1px solid rgba(0,0,0,0.1)',
+    background: '#ffffff'
   },
   backButton: {
     background: 'none',
     border: 'none',
-    color: 'white',
+    color: 'var(--background)',
     fontSize: '1rem',
     cursor: 'pointer',
     padding: '0.5rem 0',
@@ -187,7 +180,8 @@ const styles = {
   title: {
     margin: '0 0 0.5rem 0',
     fontSize: '1.3rem',
-    fontWeight: '600'
+    fontWeight: '400',
+    color: '#000000'
   },
   headerStats: {
     display: 'grid',
@@ -196,42 +190,45 @@ const styles = {
   },
   headerStat: {
     textAlign: 'center',
-    background: 'rgba(255, 255, 255, 0.15)',
+    background: 'rgba(0, 0, 0, 0.1)',
     borderRadius: '8px',
     padding: '0.75rem 0.5rem',
-    backdropFilter: 'blur(10px)'
+    color: '#000000'
   },
   statValue: {
     display: 'block',
     fontSize: '1.1rem',
-    fontWeight: 'bold',
-    marginBottom: '0.25rem'
+    fontWeight: '500',
+    marginBottom: '0.25rem',
+    color: '#000000'
   },
   statLabel: {
     display: 'block',
     fontSize: '0.75rem',
-    opacity: 0.9
+    opacity: 0.8,
+    color: '#000000'
   },
   content: {
-    padding: '0.75rem'
+    padding: '1rem',
+    paddingBottom: '1.5rem'
   },
   progressSection: {
     marginBottom: '1.5rem',
     background: 'var(--surface)',
     borderRadius: '12px',
     padding: '1rem',
-    boxShadow: 'var(--shadow)'
+    border: '1px solid var(--border)'
   },
   progressBarLarge: {
-    height: '8px',
+    height: '6px',
     background: 'var(--border)',
-    borderRadius: '4px',
+    borderRadius: '3px',
     overflow: 'hidden',
     marginBottom: '0.5rem'
   },
   progressFillLarge: {
     height: '100%',
-    borderRadius: '4px',
+    borderRadius: '3px',
     transition: 'width 0.3s ease'
   },
   progressInfo: {
@@ -245,14 +242,14 @@ const styles = {
   },
   progressPercent: {
     color: 'var(--primary)',
-    fontWeight: '600'
+    fontWeight: '500'
   },
   addTaskSection: {
     marginBottom: '1.5rem'
   },
   addTaskToggle: {
     background: 'var(--primary)',
-    color: 'white',
+    color: 'var(--background)',
     border: 'none',
     padding: '0.875rem',
     borderRadius: '8px',
@@ -266,7 +263,7 @@ const styles = {
     padding: '1.25rem',
     background: 'var(--surface)',
     borderRadius: '12px',
-    boxShadow: 'var(--shadow)'
+    border: '1px solid var(--border)'
   },
   formGroup: {
     marginBottom: '1.25rem'
@@ -299,17 +296,15 @@ const styles = {
     background: 'var(--background)',
     cursor: 'pointer',
     display: 'flex',
-    flexDirection: 'column',
     alignItems: 'center',
-    gap: '0.25rem',
-    transition: 'all 0.2s'
+    justifyContent: 'center',
+    transition: 'all 0.2s',
+    color: 'var(--text)'
   },
   typeButtonSelected: {
     borderColor: 'var(--primary)',
-    background: 'var(--primary-light)'
-  },
-  typeIcon: {
-    fontSize: '1.25rem'
+    background: 'var(--primary)',
+    color: 'var(--background)'
   },
   typeText: {
     fontSize: '0.8rem',
@@ -318,7 +313,7 @@ const styles = {
   },
   submitButton: {
     background: 'var(--success)',
-    color: 'white',
+    color: 'var(--background)',
     border: 'none',
     padding: '0.875rem',
     borderRadius: '8px',
@@ -335,12 +330,7 @@ const styles = {
     padding: '2rem 1rem',
     background: 'var(--surface)',
     borderRadius: '12px',
-    boxShadow: 'var(--shadow)'
-  },
-  emptyIcon: {
-    fontSize: '2.5rem',
-    marginBottom: '1rem',
-    color: 'var(--text-light)'
+    border: '1px solid var(--border)'
   },
   emptyTitle: {
     margin: '0 0 0.5rem 0',
@@ -364,15 +354,11 @@ const styles = {
     justifyContent: 'center',
     alignItems: 'center'
   },
-  notFoundIcon: {
-    fontSize: '3rem',
-    marginBottom: '1rem',
-    color: 'var(--text-light)'
-  },
   notFoundTitle: {
     margin: '0 0 0.75rem 0',
     color: 'var(--text)',
-    fontSize: '1.2rem'
+    fontSize: '1.2rem',
+    fontWeight: '400'
   },
   notFoundText: {
     color: 'var(--text-light)',

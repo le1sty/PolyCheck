@@ -1,17 +1,7 @@
-import { useState } from 'preact/hooks'
 import { useStore } from '../store'
 
 export function Profile() {
-  const { user, logout } = useStore()
-  const [isEditing, setIsEditing] = useState(false)
-  const [editName, setEditName] = useState(user?.name || '')
-  
-  const handleSave = () => {
-    // В демо-версии просто сохраняем в localStorage
-    localStorage.setItem('userName', editName)
-    setIsEditing(false)
-    window.location.reload()
-  }
+  const { user, logout, toggleTheme, settings } = useStore()
   
   const handleLogout = () => {
     logout()
@@ -28,40 +18,42 @@ export function Profile() {
       <div style={styles.content}>
         <div style={styles.card}>
           <div style={styles.profileHeader}>
-            <img src={user?.avatar} alt="Аватар" style={styles.profileAvatar} />
             <div style={styles.profileInfo}>
-              {isEditing ? (
-                <div style={styles.editForm}>
-                  <input
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    style={styles.nameInput}
-                    placeholder="Ваше имя"
-                  />
-                  <div style={styles.editButtons}>
-                    <button onClick={handleSave} style={styles.saveBtn}>Сохранить</button>
-                    <button onClick={() => setIsEditing(false)} style={styles.cancelBtn}>Отмена</button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <h2 style={styles.userName}>{user?.name}</h2>
-                  <p style={styles.userEmail}>{user?.email}</p>
-                  <button 
-                    onClick={() => setIsEditing(true)}
-                    style={styles.editBtn}
-                  >
-                    ✏️ Редактировать
-                  </button>
-                </>
-              )}
+              <h2 style={styles.userName}>{user?.name}</h2>
+              <div style={styles.emailSection}>
+                <span style={styles.emailLabel}>Email:</span>
+                <span style={styles.emailValue}>{user?.email}</span>
+              </div>
+              <div style={styles.infoItem}>
+                <span style={styles.infoLabel}>Группа:</span>
+                <span style={styles.infoValue}>
+                  {user?.groupId 
+                    ? useStore.getState().groups.find(g => g.id === user.groupId)?.name 
+                    : 'ИТ-101'}
+                </span>
+              </div>
             </div>
           </div>
         </div>
         
+        <div style={styles.card}>
+          <h3 style={styles.sectionTitle}>Внешний вид</h3>
+          
+          <div style={styles.settingItem}>
+            <div style={styles.settingInfo}>
+              <span style={styles.settingLabel}>Тема</span>
+              <span style={styles.settingValue}>
+                {settings.theme === 'dark' ? 'Тёмная' : 'Светлая'}
+              </span>
+            </div>
+            <button onClick={toggleTheme} style={styles.toggleBtn}>
+              Сменить
+            </button>
+          </div>
+        </div>
+        
         <button onClick={handleLogout} style={styles.logoutBtn}>
-          🚪 Выйти из аккаунта
+          Выйти из аккаунта
         </button>
       </div>
     </div>
@@ -70,7 +62,8 @@ export function Profile() {
 
 const styles = {
   page: {
-    paddingBottom: '5rem'
+    minHeight: 'calc(100vh - 70px)',
+    paddingBottom: '1rem'
   },
   header: {
     padding: '1rem',
@@ -87,7 +80,9 @@ const styles = {
   },
   title: {
     margin: '0.5rem 0',
-    color: 'var(--text)'
+    color: 'var(--text)',
+    fontSize: '1.3rem',
+    fontWeight: '400'
   },
   content: {
     padding: '1rem'
@@ -96,80 +91,99 @@ const styles = {
     background: 'var(--surface)',
     borderRadius: '12px',
     padding: '1.5rem',
-    boxShadow: 'var(--shadow)',
-    marginBottom: '1rem'
+    marginBottom: '1rem',
+    border: '1px solid var(--border)'
   },
   profileHeader: {
     display: 'flex',
     alignItems: 'center',
     gap: '1rem'
   },
-  profileAvatar: {
-    width: '80px',
-    height: '80px',
-    borderRadius: '50%',
-    border: '3px solid var(--primary)'
-  },
   profileInfo: {
     flex: 1
   },
   userName: {
-    margin: '0 0 0.25rem 0',
+    margin: '0 0 1rem 0',
+    color: 'var(--text)',
+    fontSize: '1.2rem',
+    fontWeight: '400'
+  },
+  emailSection: {
+    marginBottom: '1rem',
+    paddingBottom: '1rem',
+    borderBottom: '1px solid var(--border)'
+  },
+  emailLabel: {
+    display: 'block',
+    color: 'var(--text-light)',
+    fontSize: '0.9rem',
+    marginBottom: '0.25rem'
+  },
+  emailValue: {
+    display: 'block',
+    color: 'var(--text)',
+    fontSize: '1rem',
+    fontFamily: 'monospace'
+  },
+  infoItem: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    padding: '0.5rem 0',
+    borderBottom: '1px solid var(--border)'
+  },
+  infoLabel: {
+    color: 'var(--text-light)',
+    fontSize: '0.9rem'
+  },
+  infoValue: {
+    color: 'var(--text)',
+    fontWeight: '500'
+  },
+  sectionTitle: {
+    margin: '0 0 1rem 0',
+    color: 'var(--text)',
+    fontSize: '1rem',
+    fontWeight: '500'
+  },
+  settingItem: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '1rem 0',
+    borderBottom: '1px solid var(--border)'
+  },
+  settingInfo: {
+    flex: 1
+  },
+  settingLabel: {
+    display: 'block',
+    fontWeight: 400,
+    marginBottom: '0.25rem',
     color: 'var(--text)'
   },
-  userEmail: {
-    margin: '0 0 1rem 0',
+  settingValue: {
+    fontSize: '0.875rem',
     color: 'var(--text-light)'
   },
-  editBtn: {
-    background: 'none',
-    border: '1px solid var(--border)',
-    borderRadius: '8px',
+  toggleBtn: {
     padding: '0.5rem 1rem',
-    cursor: 'pointer',
-    color: 'var(--text)'
-  },
-  editForm: {
-    marginTop: '1rem'
-  },
-  nameInput: {
-    width: '100%',
-    padding: '0.75rem',
     border: '1px solid var(--border)',
-    borderRadius: '8px',
-    marginBottom: '1rem',
-    fontSize: '1rem'
-  },
-  editButtons: {
-    display: 'flex',
-    gap: '0.5rem'
-  },
-  saveBtn: {
-    flex: 1,
-    background: 'var(--success)',
-    color: 'white',
-    border: 'none',
-    padding: '0.75rem',
-    borderRadius: '8px',
-    cursor: 'pointer'
-  },
-  cancelBtn: {
-    flex: 1,
-    background: 'var(--danger)',
-    color: 'white',
-    border: 'none',
-    padding: '0.75rem',
-    borderRadius: '8px',
-    cursor: 'pointer'
+    borderRadius: '6px',
+    fontSize: '0.875rem',
+    cursor: 'pointer',
+    background: 'var(--surface)',
+    color: 'var(--text)',
+    transition: 'all 0.2s'
   },
   logoutBtn: {
     width: '100%',
-    background: 'var(--danger)',
-    color: 'white',
-    border: 'none',
+    background: 'rgba(255, 68, 68, 0.1)',
+    color: '#ff4444',
+    border: '1px solid rgba(255, 68, 68, 0.2)',
     padding: '1rem',
     borderRadius: '8px',
     fontSize: '1rem',
-    cursor: 'pointer'
+    cursor: 'pointer',
+    marginTop: '1rem'
   }
 }

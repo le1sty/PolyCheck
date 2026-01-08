@@ -5,28 +5,18 @@ export default function DisciplineCard({ discipline, onClick }) {
     <div 
       style={{
         ...styles.card,
-        '--discipline-color': discipline.color || '#4f46e5'
+        '--discipline-color': discipline.color || '#ffffff'
       }}
       onClick={onClick}
     >
       <div style={styles.header}>
-        <div 
-          style={{
-            ...styles.icon,
-            backgroundColor: discipline.color || '#4f46e5'
-          }}
-        >
-          {discipline.name.charAt(0)}
-        </div>
         <div style={styles.info}>
           <h3 style={styles.name}>{discipline.name}</h3>
           <div style={styles.stats}>
             <span style={styles.statItem}>
-              <span>✅</span>
               <span>{discipline.completedCount || 0}/{discipline.totalCount || 0}</span>
             </span>
             <span style={styles.statItem}>
-              <span>📊</span>
               <span>{progress}%</span>
             </span>
           </div>
@@ -38,7 +28,8 @@ export default function DisciplineCard({ discipline, onClick }) {
           <div 
             style={{
               ...styles.progressFill,
-              width: `${progress}%`
+              width: `${progress}%`,
+              backgroundColor: discipline.color || '#ffffff'
             }}
           ></div>
         </div>
@@ -50,7 +41,7 @@ export default function DisciplineCard({ discipline, onClick }) {
 const styles = {
   card: {
     background: 'var(--surface)',
-    borderRadius: '16px',
+    borderRadius: '12px',
     padding: '1.5rem',
     boxShadow: 'var(--shadow)',
     cursor: 'pointer',
@@ -63,25 +54,14 @@ const styles = {
     gap: '1rem',
     marginBottom: '1rem'
   },
-  icon: {
-    width: '50px',
-    height: '50px',
-    borderRadius: '12px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: 'white',
-    fontSize: '1.5rem',
-    fontWeight: 'bold',
-    flexShrink: 0
-  },
   info: {
     flex: 1
   },
   name: {
     margin: '0 0 0.5rem 0',
     color: 'var(--text)',
-    fontSize: '1.1rem'
+    fontSize: '1.1rem',
+    fontWeight: '400'
   },
   stats: {
     display: 'flex',
@@ -98,15 +78,14 @@ const styles = {
     margin: '1rem 0'
   },
   progressBar: {
-    height: '6px',
+    height: '4px',
     background: 'var(--border)',
-    borderRadius: '3px',
+    borderRadius: '2px',
     overflow: 'hidden'
   },
   progressFill: {
     height: '100%',
-    background: 'var(--discipline-color, #4f46e5)',
-    borderRadius: '3px',
+    borderRadius: '2px',
     transition: 'width 0.3s ease'
   }
 }
