@@ -1,4 +1,3 @@
-// src/store.js
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { authAPI, subjectsAPI, getAccessToken, checkAuth, clearAccessToken } from './api'
@@ -8,11 +7,7 @@ export const useStore = create(
     (set, get) => ({
       user: null,
       subjects: [],
-      tasks: [
-        { id: '1', disciplineId: '1', title: 'Домашнее задание 1', type: 'homework', completed: true },
-        { id: '2', disciplineId: '1', title: 'Контрольная работа', type: 'test', completed: false },
-        { id: '3', disciplineId: '2', title: 'Лабораторная работа', type: 'lab', completed: true },
-      ],
+      tasks: [], // Убрали тестовые задачи
       settings: {
         theme: 'dark',
         notifications: true
@@ -24,25 +19,32 @@ export const useStore = create(
       initUserFromToken: async () => {
         const token = getAccessToken();
         if (token) {
-          set({ 
-            user: {
-              id: '1',
-              email: 'user@example.com',
-              name: 'User',
-              groupName: 'ИТ-101'
-            }
-          });
+          // Пользователь будет загружен из API
+          set({ isLoading: true });
+          try {
+            // Здесь можно добавить запрос для получения данных пользователя
+            // Пока оставляем минимальные данные
+            set({ 
+              user: {
+                id: 'temp',
+                email: '',
+                name: '',
+                groupName: ''
+              },
+              isLoading: false
+            });
+          } catch (error) {
+            set({ isLoading: false });
+          }
         }
       },
       
-      // Регистрация с обработкой ошибок axios
       register: async (email, password, groupName) => {
         set({ isLoading: true, error: null });
         
         try {
           const data = await authAPI.register(email, password, groupName);
           
-          // Автоматически логинимся после регистрации
           const loginData = await authAPI.login(email, password);
           
           set({
@@ -53,7 +55,9 @@ export const useStore = create(
               groupName: data.group_name,
               groupId: data.group_id
             },
-            isLoading: false
+            isLoading: false,
+            subjects: [], // Очищаем предметы при новом пользователе
+            tasks: [] // Очищаем задачи при новом пользователе
           });
           
           return { success: true, data };
@@ -75,7 +79,6 @@ export const useStore = create(
         }
       },
       
-      // Вход с обработкой ошибок axios
       login: async (email, password) => {
         set({ isLoading: true, error: null });
         
@@ -84,11 +87,13 @@ export const useStore = create(
           
           set({ 
             user: { 
-              id: Date.now().toString(), 
+              id: data.user_id?.toString() || Date.now().toString(), 
               email, 
               name: email.split('@')[0],
-              groupName: 'ИТ-101'
+              groupName: data.group_name || 'Не указана'
             },
+            subjects: [], // Сбрасываем предметы, они загрузятся отдельно
+            tasks: [], // Сбрасываем задачи
             isLoading: false
           });
           
@@ -111,17 +116,6 @@ export const useStore = create(
         }
       },
       
-      // Демо вход
-      demoLogin: (email) => set({ 
-        user: { 
-          id: Date.now().toString(), 
-          email, 
-          name: email.split('@')[0],
-          groupName: 'ИТ-101'
-        } 
-      }),
-      
-      // Выход
       logout: async () => {
         set({ isLoading: true });
         
@@ -131,11 +125,10 @@ export const useStore = create(
           console.error('Ошибка при выходе:', error);
         } finally {
           clearAccessToken();
-          set({ user: null, subjects: [], isLoading: false });
+          set({ user: null, subjects: [], tasks: [], isLoading: false });
         }
       },
       
-      // Загрузка предметов
       loadSubjects: async () => {
         set({ isLoading: true, error: null });
         
@@ -156,7 +149,6 @@ export const useStore = create(
         }
       },
       
-      // Добавление предмета
       addSubject: async (name) => {
         set({ isLoading: true, error: null });
         
@@ -187,7 +179,6 @@ export const useStore = create(
         }
       },
       
-      // Удаление предмета
       deleteSubject: async (subjectId) => {
         set({ isLoading: true, error: null });
         
@@ -214,10 +205,8 @@ export const useStore = create(
         }
       },
       
-      // Очистка ошибки
       clearError: () => set({ error: null }),
       
-      // Остальные методы (локальные)
       addTask: (disciplineId, title, type) => set(state => ({
         tasks: [
           ...state.tasks,
@@ -321,8 +310,3 @@ export const useStore = create(
     }
   )
 );
-
-export const mockUsers = [
-  { email: 'student@university.ru', password: '123456' },
-  { email: 'test@test.com', password: 'test123' }
-];

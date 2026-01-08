@@ -4,24 +4,38 @@ import { useStore } from '../store'
 export function Login({ navigate }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [isRegister, setIsRegister] = useState(false)
-  const [groupName, setGroupName] = useState('ИТ-101')
+  const [groupName, setGroupName] = useState('')
+  const [passwordError, setPasswordError] = useState('')
   
-  const { register, login, demoLogin, isLoading, error, clearError } = useStore()
+  const { register, login, isLoading, error, clearError } = useStore() // Убрали demoLogin
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    clearError() // Очищаем предыдущие ошибки
+    clearError()
+    setPasswordError('')
 
-    // Простая валидация формы
     if (!email.trim() || !password.trim()) {
       useStore.getState().clearError?.()
       return
     }
 
-    if (isRegister && !groupName.trim()) {
-      useStore.getState().clearError?.()
-      return
+    if (isRegister) {
+      if (!groupName.trim()) {
+        useStore.getState().clearError?.()
+        return
+      }
+      
+      if (password !== confirmPassword) {
+        setPasswordError('Пароли не совпадают')
+        return
+      }
+      
+      if (password.length < 6) {
+        setPasswordError('Пароль должен быть не менее 6 символов')
+        return
+      }
     }
 
     try {
@@ -31,13 +45,15 @@ export function Login({ navigate }) {
         await login(email, password)
       }
     } catch (err) {
-      // Ошибка уже обработана в store, ничего не делаем
+      // Ошибка уже обработана в store
     }
   }
 
-  const handleDemoLogin = () => {
+  const toggleRegisterMode = (value) => {
+    setIsRegister(value)
     clearError()
-    demoLogin('student@university.ru')
+    setPasswordError('')
+    setConfirmPassword('')
   }
 
   return (
@@ -84,25 +100,46 @@ export function Login({ navigate }) {
                 style={styles.input}
                 minLength={6}
               />
+              {isRegister && (
+                <div style={styles.passwordHint}>
+                  Не менее 6 символов
+                </div>
+              )}
             </div>
             
             {isRegister && (
               <div style={styles.formGroup}>
-                <label htmlFor="groupName" style={styles.label}>Название группы</label>
+                <label htmlFor="confirmPassword" style={styles.label}>Подтвердите пароль</label>
                 <input
-                  id="groupName"
-                  type="text"
-                  value={groupName}
-                  onChange={(e) => setGroupName(e.target.value)}
-                  placeholder="ИТ-101"
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
                   required
                   disabled={isLoading}
-                  style={styles.input}
+                  style={{
+                    ...styles.input,
+                    ...(passwordError && passwordError.includes('совпадают') ? styles.inputError : {})
+                  }}
+                  minLength={6}
                 />
               </div>
             )}
-
-            {/* Отображаем только глобальную ошибку из store */}
+            
+            {passwordError && (
+              <div style={styles.error}>
+                {passwordError}
+                <button 
+                  onClick={() => setPasswordError('')}
+                  style={styles.closeErrorBtn}
+                  aria-label="Закрыть ошибку"
+                >
+                  ×
+                </button>
+              </div>
+            )}
+            
             {error && (
               <div style={styles.error}>
                 {error}
@@ -113,6 +150,22 @@ export function Login({ navigate }) {
                 >
                   ×
                 </button>
+              </div>
+            )}
+
+            {isRegister && (
+              <div style={styles.formGroup}>
+                <label htmlFor="groupName" style={styles.label}>Номер группы</label>
+                <input
+                  id="groupName"
+                  type="text"
+                  value={groupName}
+                  onChange={(e) => setGroupName(e.target.value)}
+                  placeholder="5130904/30105"
+                  required
+                  disabled={isLoading}
+                  style={styles.input}
+                />
               </div>
             )}
 
@@ -130,58 +183,25 @@ export function Login({ navigate }) {
             </button>
           </form>
 
-          <div style={styles.divider}>
-            <span>или</span>
-          </div>
-
-          {!isRegister && (
-            <>
-              <button 
-                onClick={handleDemoLogin}
-                style={{
-                  ...styles.secondaryBtn,
-                  ...(isLoading ? styles.disabledBtn : {})
-                }}
-                disabled={isLoading}
-              >
-                Войти как демо-пользователь
-              </button>
-
-              <div style={styles.footer}>
-                <p>Нет аккаунта? <button 
-                  onClick={() => {
-                    setIsRegister(true)
-                    clearError()
-                  }}
-                  style={styles.linkButton}
-                  disabled={isLoading}
-                >
-                  Зарегистрироваться
-                </button></p>
-                
-                <p style={styles.hint}>
-                  Для демо-версии используйте:<br />
-                  Email: student@university.ru<br />
-                  Пароль: 123456
-                </p>
-              </div>
-            </>
-          )}
-          
-          {isRegister && (
-            <div style={styles.footer}>
+          <div style={styles.footer}>
+            {isRegister ? (
               <p>Уже есть аккаунт? <button 
-                onClick={() => {
-                  setIsRegister(false)
-                  clearError()
-                }}
+                onClick={() => toggleRegisterMode(false)}
                 style={styles.linkButton}
                 disabled={isLoading}
               >
                 Войти
               </button></p>
-            </div>
-          )}
+            ) : (
+              <p>Нет аккаунта? <button 
+                onClick={() => toggleRegisterMode(true)}
+                style={styles.linkButton}
+                disabled={isLoading}
+              >
+                Зарегистрироваться
+              </button></p>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -256,6 +276,15 @@ const styles = {
     color: 'white',
     transition: 'border-color 0.2s'
   },
+  inputError: {
+    borderColor: '#ff4444',
+    borderWidth: '2px'
+  },
+  passwordHint: {
+    fontSize: '0.75rem',
+    color: '#888888',
+    marginTop: '0.25rem'
+  },
   error: {
     background: 'rgba(255, 68, 68, 0.1)',
     color: '#ff4444',
@@ -294,25 +323,6 @@ const styles = {
     opacity: 0.6,
     cursor: 'not-allowed'
   },
-  divider: {
-    display: 'flex',
-    alignItems: 'center',
-    margin: '1.5rem 0',
-    color: '#666666'
-  },
-  secondaryBtn: {
-    width: '100%',
-    padding: '0.875rem',
-    border: '1px solid #333333',
-    borderRadius: '8px',
-    fontSize: '1rem',
-    fontWeight: 500,
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-    marginBottom: '0.75rem',
-    background: 'transparent',
-    color: 'white'
-  },
   footer: {
     marginTop: '1.5rem',
     textAlign: 'center',
@@ -327,13 +337,5 @@ const styles = {
     cursor: 'pointer',
     fontSize: '0.875rem',
     padding: '0'
-  },
-  hint: {
-    marginTop: '0.75rem',
-    padding: '0.75rem',
-    background: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: '8px',
-    fontSize: '0.75rem',
-    color: '#888888'
   }
 }
