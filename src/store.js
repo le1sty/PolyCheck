@@ -1,97 +1,223 @@
+// src/store.js
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { authAPI, subjectsAPI, getAccessToken, checkAuth, clearAccessToken } from './api'
 
 export const useStore = create(
   persist(
     (set, get) => ({
       user: null,
-      
-      groups: [
-        { id: 'it-101', name: 'ИТ-101', faculty: 'Информационные технологии' },
-        { id: 'it-102', name: 'ИТ-102', faculty: 'Информационные технологии' },
-        { id: 'cs-201', name: 'КС-201', faculty: 'Компьютерные науки' },
-      ],
-      
-      disciplines: [
-        { id: 'math-1', name: 'Математический анализ', groupId: 'it-101', color: '#ffffff' },
-        { id: 'prog-1', name: 'Программирование', groupId: 'it-101', color: '#888888' },
-        { id: 'web-1', name: 'Веб-технологии', groupId: 'it-101', color: '#444444' },
-        { id: 'db-1', name: 'Базы данных', groupId: 'it-101', color: '#222222' },
-      ],
-      
+      subjects: [],
       tasks: [
-        { id: '1', disciplineId: 'math-1', title: 'Домашнее задание 1', type: 'homework', completed: true },
-        { id: '2', disciplineId: 'math-1', title: 'Контрольная работа', type: 'test', completed: false },
-        { id: '3', disciplineId: 'prog-1', title: 'Лабораторная работа', type: 'lab', completed: true },
+        { id: '1', disciplineId: '1', title: 'Домашнее задание 1', type: 'homework', completed: true },
+        { id: '2', disciplineId: '1', title: 'Контрольная работа', type: 'test', completed: false },
+        { id: '3', disciplineId: '2', title: 'Лабораторная работа', type: 'lab', completed: true },
       ],
-      
       settings: {
         theme: 'dark',
         notifications: true
       },
-      
       isOnline: true,
+      isLoading: false,
+      error: null,
       
-      // Регистрация нового пользователя
-      register: (email, password, groupId) => set(state => {
-        const existingUser = mockUsers.find(u => u.email === email);
-        if (existingUser) {
-          throw new Error('Пользователь с таким email уже существует');
+      initUserFromToken: async () => {
+        const token = getAccessToken();
+        if (token) {
+          set({ 
+            user: {
+              id: '1',
+              email: 'user@example.com',
+              name: 'User',
+              groupName: 'ИТ-101'
+            }
+          });
         }
-        
-        // Добавляем пользователя в mockUsers
-        mockUsers.push({ email, password });
-        
-        return {
-          user: {
-            id: Date.now().toString(),
-            email,
-            name: email.split('@')[0],
-            groupId,
-            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`
-          }
-        };
-      }),
+      },
       
-      login: (email) => set({ 
+      // Регистрация с обработкой ошибок axios
+      register: async (email, password, groupName) => {
+        set({ isLoading: true, error: null });
+        
+        try {
+          const data = await authAPI.register(email, password, groupName);
+          
+          // Автоматически логинимся после регистрации
+          const loginData = await authAPI.login(email, password);
+          
+          set({
+            user: {
+              id: data.id.toString(),
+              email: data.email,
+              name: email.split('@')[0],
+              groupName: data.group_name,
+              groupId: data.group_id
+            },
+            isLoading: false
+          });
+          
+          return { success: true, data };
+        } catch (error) {
+          console.error('Ошибка регистрации:', error);
+          
+          let errorMessage = 'Произошла ошибка при регистрации';
+          
+          if (error.detail === 'REGISTER_USER_ALREADY_EXISTS') {
+            errorMessage = 'Пользователь с таким email уже существует';
+          } else if (error.detail) {
+            errorMessage = error.detail;
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+          
+          set({ error: errorMessage, isLoading: false });
+          throw new Error(errorMessage);
+        }
+      },
+      
+      // Вход с обработкой ошибок axios
+      login: async (email, password) => {
+        set({ isLoading: true, error: null });
+        
+        try {
+          const data = await authAPI.login(email, password);
+          
+          set({ 
+            user: { 
+              id: Date.now().toString(), 
+              email, 
+              name: email.split('@')[0],
+              groupName: 'ИТ-101'
+            },
+            isLoading: false
+          });
+          
+          return { success: true, data };
+        } catch (error) {
+          console.error('Ошибка входа:', error);
+          
+          let errorMessage = 'Произошла ошибка при входе';
+          
+          if (error.detail === 'LOGIN_BAD_CREDENTIALS') {
+            errorMessage = 'Неверный email или пароль';
+          } else if (error.detail) {
+            errorMessage = error.detail;
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+          
+          set({ error: errorMessage, isLoading: false });
+          throw new Error(errorMessage);
+        }
+      },
+      
+      // Демо вход
+      demoLogin: (email) => set({ 
         user: { 
           id: Date.now().toString(), 
           email, 
           name: email.split('@')[0],
-          groupId: 'it-101',
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`
+          groupName: 'ИТ-101'
         } 
       }),
       
-      logout: () => set({ user: null }),
+      // Выход
+      logout: async () => {
+        set({ isLoading: true });
+        
+        try {
+          await authAPI.logout();
+        } catch (error) {
+          console.error('Ошибка при выходе:', error);
+        } finally {
+          clearAccessToken();
+          set({ user: null, subjects: [], isLoading: false });
+        }
+      },
       
-      // Добавление новой дисциплины
-      addDiscipline: (name, groupId) => set(state => ({
-        disciplines: [
-          ...state.disciplines,
-          {
-            id: `discipline-${Date.now()}`,
-            name,
-            groupId,
-            color: '#ffffff'
+      // Загрузка предметов
+      loadSubjects: async () => {
+        set({ isLoading: true, error: null });
+        
+        try {
+          const data = await subjectsAPI.getSubjects();
+          const subjects = data.map(subject => ({
+            id: subject.id.toString(),
+            name: subject.name,
+            activities: subject.activities || []
+          }));
+          
+          set({ subjects, isLoading: false });
+          return subjects;
+        } catch (error) {
+          console.error('Ошибка загрузки предметов:', error);
+          set({ error: 'Не удалось загрузить предметы', isLoading: false });
+          return [];
+        }
+      },
+      
+      // Добавление предмета
+      addSubject: async (name) => {
+        set({ isLoading: true, error: null });
+        
+        try {
+          const data = await subjectsAPI.addSubject(name);
+          const newSubject = {
+            id: data.id.toString(),
+            name: data.name,
+            activities: data.activities || []
+          };
+          
+          set(state => ({
+            subjects: [...state.subjects, newSubject],
+            isLoading: false
+          }));
+          
+          return newSubject;
+        } catch (error) {
+          console.error('Ошибка добавления предмета:', error);
+          
+          let errorMessage = 'Не удалось добавить предмет';
+          if (error.detail) {
+            errorMessage = error.detail;
           }
-        ]
-      })),
+          
+          set({ error: errorMessage, isLoading: false });
+          throw new Error(errorMessage);
+        }
+      },
       
-      // Удаление дисциплины и всех ее задач
-      deleteDiscipline: (disciplineId) => set(state => {
-        // Сначала удаляем все задачи этой дисциплины
-        const updatedTasks = state.tasks.filter(task => task.disciplineId !== disciplineId);
+      // Удаление предмета
+      deleteSubject: async (subjectId) => {
+        set({ isLoading: true, error: null });
         
-        // Затем удаляем саму дисциплину
-        const updatedDisciplines = state.disciplines.filter(d => d.id !== disciplineId);
-        
-        return {
-          disciplines: updatedDisciplines,
-          tasks: updatedTasks
-        };
-      }),
+        try {
+          await subjectsAPI.deleteSubject(parseInt(subjectId));
+          
+          set(state => ({
+            subjects: state.subjects.filter(s => s.id !== subjectId),
+            tasks: state.tasks.filter(task => task.disciplineId !== subjectId),
+            isLoading: false
+          }));
+          
+          return true;
+        } catch (error) {
+          console.error('Ошибка удаления предмета:', error);
+          
+          let errorMessage = 'Не удалось удалить предмет';
+          if (error.detail) {
+            errorMessage = error.detail;
+          }
+          
+          set({ error: errorMessage, isLoading: false });
+          throw new Error(errorMessage);
+        }
+      },
       
+      // Очистка ошибки
+      clearError: () => set({ error: null }),
+      
+      // Остальные методы (локальные)
       addTask: (disciplineId, title, type) => set(state => ({
         tasks: [
           ...state.tasks,
@@ -134,41 +260,34 @@ export const useStore = create(
       
       setOnlineStatus: (status) => set({ isOnline: status }),
       
-      // Получение всех групп для регистрации
-      getAllGroups: () => {
-        return get().groups;
+      getSubjectsWithProgress: () => {
+        const { subjects, tasks } = get();
+        return subjects.map(subject => {
+          const subjectTasks = tasks.filter(t => t.disciplineId === subject.id);
+          const completedCount = subjectTasks.filter(t => t.completed).length;
+          const totalCount = subjectTasks.length;
+          
+          return {
+            ...subject,
+            progress: totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0,
+            completedCount,
+            totalCount
+          };
+        });
       },
       
-      getDisciplinesByGroup: (groupId) => {
-        const { disciplines, tasks } = get();
-        return disciplines
-          .filter(d => d.groupId === groupId)
-          .map(discipline => {
-            const disciplineTasks = tasks.filter(t => t.disciplineId === discipline.id);
-            const completedCount = disciplineTasks.filter(t => t.completed).length;
-            const totalCount = disciplineTasks.length;
-            
-            return {
-              ...discipline,
-              progress: totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0,
-              completedCount,
-              totalCount
-            };
-          });
-      },
-      
-      getDisciplineById: (disciplineId) => {
-        const { disciplines, tasks } = get();
-        const discipline = disciplines.find(d => d.id === disciplineId);
-        if (!discipline) return null;
+      getSubjectById: (subjectId) => {
+        const { subjects, tasks } = get();
+        const subject = subjects.find(s => s.id === subjectId);
+        if (!subject) return null;
         
-        const disciplineTasks = tasks.filter(t => t.disciplineId === disciplineId);
-        const completedCount = disciplineTasks.filter(t => t.completed).length;
-        const totalCount = disciplineTasks.length;
+        const subjectTasks = tasks.filter(t => t.disciplineId === subjectId);
+        const completedCount = subjectTasks.filter(t => t.completed).length;
+        const totalCount = subjectTasks.length;
         
         return {
-          ...discipline,
-          tasks: disciplineTasks,
+          ...subject,
+          tasks: subjectTasks,
           progress: totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0,
           completedCount,
           totalCount
@@ -194,6 +313,9 @@ export const useStore = create(
       onRehydrateStorage: () => (state) => {
         if (state?.settings?.theme === 'light') {
           document.documentElement.setAttribute('data-theme', 'light');
+        }
+        if (checkAuth() && !state?.user) {
+          state?.initUserFromToken?.();
         }
       }
     }

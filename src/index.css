@@ -56,27 +56,33 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overscroll-behavior-y: none;
+  /* Убираем блокировку скролла */
+  overscroll-behavior-y: auto;
   -webkit-overflow-scrolling: touch;
-  overflow: hidden;
-  position: fixed;
+  /* Убираем фиксированную позицию */
+  position: relative;
   width: 100%;
-  height: 100%;
-  touch-action: pan-x pan-y;
+  min-height: 100vh;
+  touch-action: manipulation;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 #app {
   width: 100%;
-  height: 100%;
-  overflow: hidden;
+  min-height: 100vh;
+  overflow: visible;
+}
+
+/* Для страницы логина */
+.login-page {
+  min-height: 100vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .app {
   width: 100%;
-  height: 100vh;
-  height: -webkit-fill-available;
-  height: calc(100vh - var(--safe-area-top));
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   background: var(--background);
@@ -121,7 +127,7 @@ body {
 
 /* Для standalone режима PWA */
 .standalone .app {
-  height: 100vh;
+  min-height: 100vh;
   padding-top: env(safe-area-inset-top, 0px);
 }
 

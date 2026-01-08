@@ -3,19 +3,19 @@ import { useStore } from '../store'
 import TaskItem from '../components/TaskItem'
 
 export function DisciplinePage({ disciplineId, navigate }) {
-  const { getDisciplineById, addTask } = useStore()
+  const { getSubjectById, addTask } = useStore()
   
   const [newTaskTitle, setNewTaskTitle] = useState('')
   const [newTaskType, setNewTaskType] = useState('homework')
   const [showAddForm, setShowAddForm] = useState(false)
   
-  const discipline = getDisciplineById(disciplineId)
+  const discipline = getSubjectById(disciplineId)
   
   if (!discipline) {
     return (
       <div style={styles.notFound}>
-        <h2 style={styles.notFoundTitle}>Дисциплина не найдена</h2>
-        <p style={styles.notFoundText}>ID дисциплины: {disciplineId}</p>
+        <h2 style={styles.notFoundTitle}>Предмет не найден</h2>
+        <p style={styles.notFoundText}>ID предмета: {disciplineId}</p>
         <button 
           onClick={() => navigate('home')}
           style={styles.backButton}
@@ -141,7 +141,7 @@ export function DisciplinePage({ disciplineId, navigate }) {
           {discipline.tasks.length === 0 ? (
             <div style={styles.emptyTasks}>
               <h3 style={styles.emptyTitle}>Нет задач</h3>
-              <p style={styles.emptyText}>Добавьте первую задачу для этой дисциплины</p>
+              <p style={styles.emptyText}>Добавьте первую задачу для этого предмета</p>
             </div>
           ) : (
             discipline.tasks.map(task => (

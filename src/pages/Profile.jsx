@@ -3,9 +3,13 @@ import { useStore } from '../store'
 export function Profile({ navigate }) {
   const { user, logout, toggleTheme, settings } = useStore()
   
-  const handleLogout = () => {
-    logout()
-    window.location.href = '/login'
+  const handleLogout = async () => {
+    try {
+      await logout();
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Ошибка при выходе:', error);
+    }
   }
   
   return (
@@ -26,9 +30,7 @@ export function Profile({ navigate }) {
               <div style={styles.infoItem}>
                 <span style={styles.infoLabel}>Группа:</span>
                 <span style={styles.infoValue}>
-                  {user?.groupId 
-                    ? useStore.getState().groups.find(g => g.id === user.groupId)?.name 
-                    : 'ИТ-101'}
+                  {user?.groupName || 'ИТ-101'}
                 </span>
               </div>
             </div>

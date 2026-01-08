@@ -1,51 +1,43 @@
 import { useState } from 'preact/hooks'
-import { useStore, mockUsers } from '../store'
+import { useStore } from '../store'
 
 export function Login({ navigate }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
   const [isRegister, setIsRegister] = useState(false)
-  const [group, setGroup] = useState('it-101')
-  const { login, register, getAllGroups } = useStore()
+  const [groupName, setGroupName] = useState('ИТ-101')
   
-  const groups = getAllGroups()
+  const { register, login, demoLogin, isLoading, error, clearError } = useStore()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    setError('')
-    setLoading(true)
+    clearError() // Очищаем предыдущие ошибки
 
-    setTimeout(() => {
-      try {
-        if (isRegister) {
-          // Регистрация
-          register(email, password, group)
-        } else {
-          // Вход
-          const userExists = mockUsers.find(
-            user => user.email === email && user.password === password
-          )
+    // Простая валидация формы
+    if (!email.trim() || !password.trim()) {
+      useStore.getState().clearError?.()
+      return
+    }
 
-          if (!userExists) {
-            setError('Неверный email или пароль')
-            setLoading(false)
-            return
-          }
+    if (isRegister && !groupName.trim()) {
+      useStore.getState().clearError?.()
+      return
+    }
 
-          login(email)
-        }
-      } catch (err) {
-        setError(err.message)
-      } finally {
-        setLoading(false)
+    try {
+      if (isRegister) {
+        await register(email, password, groupName)
+      } else {
+        await login(email, password)
       }
-    }, 500)
+    } catch (err) {
+      // Ошибка уже обработана в store, ничего не делаем
+    }
   }
 
   const handleDemoLogin = () => {
-    login('student@university.ru')
+    clearError()
+    demoLogin('student@university.ru')
   }
 
   return (
@@ -53,7 +45,7 @@ export function Login({ navigate }) {
       <div style={styles.container}>
         <div style={styles.header}>
           <h1 style={styles.title}>PolyStats</h1>
-          <p style={styles.subtitle}>Минималистичный трекер прогресса</p>
+          <p style={styles.subtitle}>Трекер твоего прогресса</p>
         </div>
 
         <div style={styles.card}>
@@ -74,7 +66,7 @@ export function Login({ navigate }) {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="student@university.ru"
                 required
-                disabled={loading}
+                disabled={isLoading}
                 style={styles.input}
               />
             </div>
@@ -88,7 +80,7 @@ export function Login({ navigate }) {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                disabled={loading}
+                disabled={isLoading}
                 style={styles.input}
                 minLength={6}
               />
@@ -96,32 +88,43 @@ export function Login({ navigate }) {
             
             {isRegister && (
               <div style={styles.formGroup}>
-                <label htmlFor="group" style={styles.label}>Группа</label>
-                <select
-                  id="group"
-                  value={group}
-                  onChange={(e) => setGroup(e.target.value)}
+                <label htmlFor="groupName" style={styles.label}>Название группы</label>
+                <input
+                  id="groupName"
+                  type="text"
+                  value={groupName}
+                  onChange={(e) => setGroupName(e.target.value)}
+                  placeholder="ИТ-101"
                   required
-                  disabled={loading}
-                  style={styles.select}
-                >
-                  {groups.map(g => (
-                    <option key={g.id} value={g.id}>
-                      {g.name}
-                    </option>
-                  ))}
-                </select>
+                  disabled={isLoading}
+                  style={styles.input}
+                />
               </div>
             )}
 
-            {error && <div style={styles.error}>{error}</div>}
+            {/* Отображаем только глобальную ошибку из store */}
+            {error && (
+              <div style={styles.error}>
+                {error}
+                <button 
+                  onClick={clearError}
+                  style={styles.closeErrorBtn}
+                  aria-label="Закрыть ошибку"
+                >
+                  ×
+                </button>
+              </div>
+            )}
 
             <button 
               type="submit" 
-              style={styles.primaryBtn}
-              disabled={loading}
+              style={{
+                ...styles.primaryBtn,
+                ...(isLoading ? styles.disabledBtn : {})
+              }}
+              disabled={isLoading}
             >
-              {loading 
+              {isLoading 
                 ? (isRegister ? 'Регистрация...' : 'Вход...')
                 : (isRegister ? 'Зарегистрироваться' : 'Войти')}
             </button>
@@ -135,17 +138,23 @@ export function Login({ navigate }) {
             <>
               <button 
                 onClick={handleDemoLogin}
-                style={styles.secondaryBtn}
-                disabled={loading}
+                style={{
+                  ...styles.secondaryBtn,
+                  ...(isLoading ? styles.disabledBtn : {})
+                }}
+                disabled={isLoading}
               >
                 Войти как демо-пользователь
               </button>
 
               <div style={styles.footer}>
                 <p>Нет аккаунта? <button 
-                  onClick={() => setIsRegister(true)} 
+                  onClick={() => {
+                    setIsRegister(true)
+                    clearError()
+                  }}
                   style={styles.linkButton}
-                  disabled={loading}
+                  disabled={isLoading}
                 >
                   Зарегистрироваться
                 </button></p>
@@ -162,9 +171,12 @@ export function Login({ navigate }) {
           {isRegister && (
             <div style={styles.footer}>
               <p>Уже есть аккаунт? <button 
-                onClick={() => setIsRegister(false)} 
+                onClick={() => {
+                  setIsRegister(false)
+                  clearError()
+                }}
                 style={styles.linkButton}
-                disabled={loading}
+                disabled={isLoading}
               >
                 Войти
               </button></p>
@@ -244,18 +256,6 @@ const styles = {
     color: 'white',
     transition: 'border-color 0.2s'
   },
-  select: {
-    width: '100%',
-    padding: '0.75rem 1rem',
-    border: '1px solid #333333',
-    borderRadius: '8px',
-    fontSize: '1rem',
-    background: '#000000',
-    color: 'white',
-    transition: 'border-color 0.2s',
-    appearance: 'none',
-    WebkitAppearance: 'none'
-  },
   error: {
     background: 'rgba(255, 68, 68, 0.1)',
     color: '#ff4444',
@@ -263,7 +263,19 @@ const styles = {
     borderRadius: '8px',
     marginBottom: '1rem',
     fontSize: '0.875rem',
-    border: '1px solid rgba(255, 68, 68, 0.2)'
+    border: '1px solid rgba(255, 68, 68, 0.2)',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  closeErrorBtn: {
+    background: 'none',
+    border: 'none',
+    color: '#ff4444',
+    fontSize: '1.25rem',
+    cursor: 'pointer',
+    padding: '0 0.25rem',
+    opacity: 0.7
   },
   primaryBtn: {
     width: '100%',
@@ -277,6 +289,10 @@ const styles = {
     marginBottom: '0.75rem',
     background: 'white',
     color: 'black'
+  },
+  disabledBtn: {
+    opacity: 0.6,
+    cursor: 'not-allowed'
   },
   divider: {
     display: 'flex',

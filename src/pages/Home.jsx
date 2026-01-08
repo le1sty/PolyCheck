@@ -1,33 +1,56 @@
-import { useState } from 'preact/hooks'
+import { useState, useEffect } from 'preact/hooks'
 import { useStore } from '../store'
 import { SwipeableDisciplineCard } from '../components/SwipeableDisciplineCard'
 
 export function Home({ navigate }) {
-  const { user, getDisciplinesByGroup, getTasksStats, addDiscipline, deleteDiscipline } = useStore()
+  const { user, getSubjectsWithProgress, getTasksStats, addSubject, deleteSubject, loadSubjects } = useStore()
   const [showAddForm, setShowAddForm] = useState(false)
-  const [newDisciplineName, setNewDisciplineName] = useState('')
+  const [newSubjectName, setNewSubjectName] = useState('')
+  const [loading, setLoading] = useState(true)
   
-  const disciplines = user?.groupId 
-    ? getDisciplinesByGroup(user.groupId)
-    : getDisciplinesByGroup('it-101')
-
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      setLoading(true);
+      try {
+        await loadSubjects();
+      } catch (error) {
+        console.error('Ошибка загрузки предметов:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchSubjects();
+  }, []);
+  
+  const subjects = getSubjectsWithProgress();
   const stats = getTasksStats?.() || { completed: 0, total: 0, completionRate: 0 }
 
-  const handleDisciplineClick = (disciplineId) => {
-    navigate('discipline', disciplineId)
+  const handleSubjectClick = (subjectId) => {
+    navigate('discipline', subjectId)
   }
   
-  const handleDeleteDiscipline = (disciplineId) => {
-    deleteDiscipline(disciplineId)
+  const handleDeleteSubject = async (subjectId) => {
+    if (confirm(`Удалить предмет "${subjects.find(s => s.id === subjectId)?.name}"?`)) {
+      try {
+        await deleteSubject(subjectId);
+      } catch (error) {
+        alert('Ошибка при удалении предмета');
+      }
+    }
   }
   
-  const handleAddDiscipline = (e) => {
+  const handleAddSubject = async (e) => {
     e.preventDefault()
-    if (!newDisciplineName.trim()) return
+    if (!newSubjectName.trim()) return
     
-    addDiscipline(newDisciplineName.trim(), user?.groupId || 'it-101')
-    setNewDisciplineName('')
-    setShowAddForm(false)
+    try {
+      await addSubject(newSubjectName.trim());
+      setNewSubjectName('')
+      setShowAddForm(false)
+    } catch (error) {
+      alert('Ошибка при добавлении предмета');
+    }
   }
 
   return (
@@ -36,19 +59,15 @@ export function Home({ navigate }) {
         <div style={styles.userInfo}>
           <div style={styles.userDetails}>
             <h2 style={styles.userName}>{user?.name}</h2>
-            <p style={styles.groupName}>
-              {user?.groupId 
-                ? useStore.getState().groups.find(g => g.id === user.groupId)?.name 
-                : 'ИТ-101'}
-            </p>
+            <p style={styles.groupName}>{user?.groupName || 'ИТ-101'}</p>
           </div>
         </div>
 
         <div style={styles.stats}>
           <div style={styles.statCard}>
             <div style={styles.statContent}>
-              <span style={styles.statValue}>{disciplines.length}</span>
-              <span style={styles.statLabel}>Дисциплин</span>
+              <span style={styles.statValue}>{subjects.length}</span>
+              <span style={styles.statLabel}>Предметов</span>
             </div>
           </div>
           
@@ -70,7 +89,7 @@ export function Home({ navigate }) {
 
       <div style={styles.content}>
         <div style={styles.sectionHeader}>
-          <h2 style={styles.sectionTitle}>Дисциплины</h2>
+          <h2 style={styles.sectionTitle}>Предметы</h2>
           <button 
             onClick={() => setShowAddForm(!showAddForm)}
             style={styles.addButton}
@@ -80,13 +99,13 @@ export function Home({ navigate }) {
         </div>
         
         {showAddForm && (
-          <form onSubmit={handleAddDiscipline} style={styles.addForm}>
+          <form onSubmit={handleAddSubject} style={styles.addForm}>
             <div style={styles.formGroup}>
               <input
                 type="text"
-                value={newDisciplineName}
-                onChange={(e) => setNewDisciplineName(e.target.value)}
-                placeholder="Название новой дисциплины"
+                value={newSubjectName}
+                onChange={(e) => setNewSubjectName(e.target.value)}
+                placeholder="Название нового предмета"
                 style={styles.input}
                 autoFocus
               />
@@ -102,7 +121,7 @@ export function Home({ navigate }) {
               <button 
                 type="submit"
                 style={styles.submitButton}
-                disabled={!newDisciplineName.trim()}
+                disabled={!newSubjectName.trim()}
               >
                 Добавить
               </button>
@@ -110,25 +129,29 @@ export function Home({ navigate }) {
           </form>
         )}
 
-        {disciplines.length === 0 ? (
+        {loading ? (
+          <div style={styles.loadingState}>
+            <p style={styles.loadingText}>Загрузка предметов...</p>
+          </div>
+        ) : subjects.length === 0 ? (
           <div style={styles.emptyState}>
-            <h3 style={styles.emptyTitle}>Нет дисциплин</h3>
-            <p style={styles.emptyText}>Добавьте первую дисциплину</p>
+            <h3 style={styles.emptyTitle}>Нет предметов</h3>
+            <p style={styles.emptyText}>Добавьте первый предмет</p>
             <button 
               onClick={() => setShowAddForm(true)}
               style={styles.addFirstButton}
             >
-              Добавить дисциплину
+              Добавить предмет
             </button>
           </div>
         ) : (
           <div style={styles.grid}>
-            {disciplines.map(discipline => (
+            {subjects.map(subject => (
               <SwipeableDisciplineCard
-                key={discipline.id}
-                discipline={discipline}
-                onClick={() => handleDisciplineClick(discipline.id)}
-                onDelete={handleDeleteDiscipline}
+                key={subject.id}
+                discipline={subject}
+                onClick={() => handleSubjectClick(subject.id)}
+                onDelete={handleDeleteSubject}
               />
             ))}
           </div>
@@ -281,6 +304,18 @@ const styles = {
     display: 'grid',
     gridTemplateColumns: '1fr',
     gap: '0.75rem'
+  },
+  loadingState: {
+    textAlign: 'center',
+    padding: '3rem 1rem',
+    background: 'var(--surface)',
+    borderRadius: '12px',
+    border: '1px solid var(--border)'
+  },
+  loadingText: {
+    margin: 0,
+    color: 'var(--text-light)',
+    fontSize: '0.9rem'
   },
   emptyState: {
     textAlign: 'center',
