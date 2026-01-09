@@ -1,13 +1,15 @@
 import { useState, useRef } from 'preact/hooks'
 import DisciplineCard from './DisciplineCard'
 
-export function SwipeableDisciplineCard({ discipline, onClick, onDelete }) {
+export function SwipeableDisciplineCard({ discipline, onClick, onDelete, isDeleting = false }) {
   const [isSwiping, setIsSwiping] = useState(false)
   const [translateX, setTranslateX] = useState(0)
   const touchStartX = useRef(0)
   const touchStartY = useRef(0)
   
   const handleTouchStart = (e) => {
+    if (isDeleting) return;
+    
     const touch = e.touches[0]
     touchStartX.current = touch.clientX
     touchStartY.current = touch.clientY
@@ -15,7 +17,7 @@ export function SwipeableDisciplineCard({ discipline, onClick, onDelete }) {
   }
   
   const handleTouchMove = (e) => {
-    if (!isSwiping) return
+    if (!isSwiping || isDeleting) return
     
     const touch = e.touches[0]
     const deltaX = touch.clientX - touchStartX.current
@@ -40,12 +42,14 @@ export function SwipeableDisciplineCard({ discipline, onClick, onDelete }) {
   }
   
   const handleTouchEnd = () => {
+    if (isDeleting) return;
+    
     setIsSwiping(false)
     
     // Если свайпнули достаточно далеко влево, вызываем onDelete
     if (translateX < -100) {
       setTranslateX(0)
-      onDelete(discipline.id) // Просто вызываем переданную функцию
+      onDelete(discipline.id)
     } else {
       // Иначе возвращаем на место
       setTranslateX(0)
@@ -53,6 +57,7 @@ export function SwipeableDisciplineCard({ discipline, onClick, onDelete }) {
   }
   
   const handleClick = () => {
+    if (isDeleting) return;
     onClick()
   }
   
@@ -63,7 +68,9 @@ export function SwipeableDisciplineCard({ discipline, onClick, onDelete }) {
         transform: `translateX(${translateX}px)`,
         transition: isSwiping ? 'none' : 'transform 0.3s ease',
         backgroundColor: translateX < -80 ? 'rgba(255, 68, 68, 0.1)' : 'transparent',
-        borderLeft: translateX < -80 ? '4px solid #ff4444' : 'none'
+        borderLeft: translateX < -80 ? '4px solid #ff4444' : 'none',
+        opacity: isDeleting ? 0.7 : 1,
+        pointerEvents: isDeleting ? 'none' : 'auto'
       }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
@@ -88,7 +95,7 @@ const styles = {
     borderRadius: '12px',
     overflow: 'hidden',
     cursor: 'pointer',
-    transition: 'background-color 0.2s, border-left 0.2s'
+    transition: 'background-color 0.2s, border-left 0.2s, opacity 0.2s'
   },
   deleteIndicator: {
     position: 'absolute',

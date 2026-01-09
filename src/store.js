@@ -7,7 +7,7 @@ export const useStore = create(
     (set, get) => ({
       user: null,
       subjects: [],
-      tasks: [], // Убрали тестовые задачи
+      tasks: [],
       settings: {
         theme: 'dark',
         notifications: true
@@ -19,11 +19,8 @@ export const useStore = create(
       initUserFromToken: async () => {
         const token = getAccessToken();
         if (token) {
-          // Пользователь будет загружен из API
           set({ isLoading: true });
           try {
-            // Здесь можно добавить запрос для получения данных пользователя
-            // Пока оставляем минимальные данные
             set({ 
               user: {
                 id: 'temp',
@@ -56,8 +53,8 @@ export const useStore = create(
               groupId: data.group_id
             },
             isLoading: false,
-            subjects: [], // Очищаем предметы при новом пользователе
-            tasks: [] // Очищаем задачи при новом пользователе
+            subjects: [],
+            tasks: []
           });
           
           return { success: true, data };
@@ -92,8 +89,8 @@ export const useStore = create(
               name: email.split('@')[0],
               groupName: data.group_name || 'Не указана'
             },
-            subjects: [], // Сбрасываем предметы, они загрузятся отдельно
-            tasks: [], // Сбрасываем задачи
+            subjects: [],
+            tasks: [],
             isLoading: false
           });
           
@@ -160,10 +157,8 @@ export const useStore = create(
             activities: data.activities || []
           };
           
-          set(state => ({
-            subjects: [...state.subjects, newSubject],
-            isLoading: false
-          }));
+          // Не добавляем в локальное состояние, так как будем перезагружать
+          set({ isLoading: false });
           
           return newSubject;
         } catch (error) {
@@ -171,7 +166,13 @@ export const useStore = create(
           
           let errorMessage = 'Не удалось добавить предмет';
           if (error.detail) {
-            errorMessage = error.detail;
+            if (typeof error.detail === 'string') {
+              errorMessage = error.detail;
+            } else if (Array.isArray(error.detail)) {
+              errorMessage = error.detail.map(d => d.msg).join(', ');
+            }
+          } else if (error.message) {
+            errorMessage = error.message;
           }
           
           set({ error: errorMessage, isLoading: false });
@@ -183,21 +184,28 @@ export const useStore = create(
         set({ isLoading: true, error: null });
         
         try {
-          await subjectsAPI.deleteSubject(parseInt(subjectId));
+          // Конвертируем subjectId в число для API
+          const numericId = parseInt(subjectId);
+          if (isNaN(numericId)) {
+            throw new Error('Неверный ID предмета');
+          }
           
-          set(state => ({
-            subjects: state.subjects.filter(s => s.id !== subjectId),
-            tasks: state.tasks.filter(task => task.disciplineId !== subjectId),
-            isLoading: false
-          }));
+          await subjectsAPI.deleteSubject(numericId);
           
+          set({ isLoading: false });
           return true;
         } catch (error) {
           console.error('Ошибка удаления предмета:', error);
           
           let errorMessage = 'Не удалось удалить предмет';
           if (error.detail) {
-            errorMessage = error.detail;
+            if (typeof error.detail === 'string') {
+              errorMessage = error.detail;
+            } else if (Array.isArray(error.detail)) {
+              errorMessage = error.detail.map(d => d.msg).join(', ');
+            }
+          } else if (error.message) {
+            errorMessage = error.message;
           }
           
           set({ error: errorMessage, isLoading: false });

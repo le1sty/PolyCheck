@@ -7,6 +7,8 @@ export function Home({ navigate }) {
   const [showAddForm, setShowAddForm] = useState(false)
   const [newSubjectName, setNewSubjectName] = useState('')
   const [loading, setLoading] = useState(true)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isAdding, setIsAdding] = useState(false)
   
   useEffect(() => {
     const fetchSubjects = async () => {
@@ -31,25 +33,40 @@ export function Home({ navigate }) {
   }
   
   const handleDeleteSubject = async (subjectId) => {
-    if (confirm(`Удалить предмет "${subjects.find(s => s.id === subjectId)?.name}"?`)) {
+    const subjectToDelete = subjects.find(s => s.id === subjectId);
+    if (!subjectToDelete) return;
+    
+    if (confirm(`Удалить предмет "${subjectToDelete.name}"?`)) {
+      setIsDeleting(true);
       try {
         await deleteSubject(subjectId);
+        // Перезагружаем предметы после удаления
+        await loadSubjects();
       } catch (error) {
-        alert('Ошибка при удалении предмета');
+        console.error('Ошибка при удалении предмета:', error);
+        alert('Ошибка при удалении предмета: ' + (error.message || 'Не удалось удалить предмет'));
+      } finally {
+        setIsDeleting(false);
       }
     }
   }
   
   const handleAddSubject = async (e) => {
-    e.preventDefault()
-    if (!newSubjectName.trim()) return
+    e.preventDefault();
+    if (!newSubjectName.trim()) return;
     
+    setIsAdding(true);
     try {
       await addSubject(newSubjectName.trim());
-      setNewSubjectName('')
-      setShowAddForm(false)
+      // Перезагружаем предметы после добавления
+      await loadSubjects();
+      setNewSubjectName('');
+      setShowAddForm(false);
     } catch (error) {
-      alert('Ошибка при добавлении предмета');
+      console.error('Ошибка при добавлении предмета:', error);
+      alert('Ошибка при добавлении предмета: ' + (error.message || 'Не удалось добавить предмет'));
+    } finally {
+      setIsAdding(false);
     }
   }
 
@@ -93,6 +110,7 @@ export function Home({ navigate }) {
           <button 
             onClick={() => setShowAddForm(!showAddForm)}
             style={styles.addButton}
+            disabled={isAdding}
           >
             {showAddForm ? '×' : '+'}
           </button>
@@ -108,6 +126,7 @@ export function Home({ navigate }) {
                 placeholder="Название нового предмета"
                 style={styles.input}
                 autoFocus
+                disabled={isAdding}
               />
             </div>
             <div style={styles.formActions}>
@@ -115,15 +134,19 @@ export function Home({ navigate }) {
                 type="button"
                 onClick={() => setShowAddForm(false)}
                 style={styles.cancelButton}
+                disabled={isAdding}
               >
                 Отмена
               </button>
               <button 
                 type="submit"
-                style={styles.submitButton}
-                disabled={!newSubjectName.trim()}
+                style={{
+                  ...styles.submitButton,
+                  ...(isAdding ? styles.disabledButton : {})
+                }}
+                disabled={!newSubjectName.trim() || isAdding}
               >
-                Добавить
+                {isAdding ? 'Добавление...' : 'Добавить'}
               </button>
             </div>
           </form>
@@ -140,6 +163,7 @@ export function Home({ navigate }) {
             <button 
               onClick={() => setShowAddForm(true)}
               style={styles.addFirstButton}
+              disabled={isAdding}
             >
               Добавить предмет
             </button>
@@ -152,6 +176,7 @@ export function Home({ navigate }) {
                 discipline={subject}
                 onClick={() => handleSubjectClick(subject.id)}
                 onDelete={handleDeleteSubject}
+                isDeleting={isDeleting}
               />
             ))}
           </div>
@@ -255,7 +280,9 @@ const styles = {
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    opacity: 1,
+    transition: 'opacity 0.2s'
   },
   addForm: {
     background: 'var(--surface)',
@@ -299,6 +326,10 @@ const styles = {
     padding: '0.75rem',
     fontSize: '0.95rem',
     cursor: 'pointer'
+  },
+  disabledButton: {
+    opacity: 0.6,
+    cursor: 'not-allowed'
   },
   grid: {
     display: 'grid',
